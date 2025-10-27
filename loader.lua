@@ -1,5 +1,5 @@
--- Unified Admin Script for Roblox
--- All features in single professional panel
+-- Minimal Admin Script for Roblox
+-- Complex UI with monochrome design
 -- Place this in StarterPlayerScripts or as a LocalScript
 
 local Players = game:GetService("Players")
@@ -19,6 +19,11 @@ local customWalkSpeed = 50
 local isSpeedEnabled = false
 local isAdminMode = true
 
+-- Panel state variables
+local isPanelVisible = false
+local panelSize = UDim2.new(0, 320, 0, 460)
+local logoButtonSize = UDim2.new(0, 50, 0, 50)
+
 -- Fly variables
 local isFlying = false
 local flySpeed = 100
@@ -36,336 +41,647 @@ local highJumpPower = 100
 local originalWalkSpeed = humanoid.WalkSpeed
 local originalJumpPower = humanoid.JumpPower
 
--- Create Unified GUI
+-- Color scheme (monochrome)
+local colors = {
+    primary = Color3.fromRGB(20, 20, 20),
+    secondary = Color3.fromRGB(35, 35, 35),
+    tertiary = Color3.fromRGB(50, 50, 50),
+    accent = Color3.fromRGB(70, 70, 70),
+    text = Color3.fromRGB(255, 255, 255),
+    text_dim = Color3.fromRGB(180, 180, 180),
+    active = Color3.fromRGB(100, 100, 100),
+    inactive = Color3.fromRGB(40, 40, 40)
+}
+
+-- Create Minimal GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UnifiedAdminPanel"
+screenGui.Name = "MinimalAdminPanel"
 screenGui.Parent = player:WaitForChild("PlayerGui")
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Main Panel Container
+-- Logo Button (Main Element - Always Visible)
+local logoButton = Instance.new("TextButton")
+logoButton.Name = "LogoButton"
+logoButton.Parent = screenGui
+logoButton.BackgroundColor3 = colors.primary
+logoButton.BorderSizePixel = 1
+logoButton.BorderColor3 = colors.accent
+logoButton.Position = UDim2.new(1, -60, 0, 20)
+logoButton.Size = logoButtonSize
+logoButton.Text = ""
+logoButton.Active = true
+logoButton.Draggable = true
+
+local logoCorner = Instance.new("UICorner")
+logoCorner.CornerRadius = UDim.new(0, 25)
+logoCorner.Parent = logoButton
+
+-- Logo Container (for custom logo/text)
+local logoContainer = Instance.new("Frame")
+logoContainer.Name = "LogoContainer"
+logoContainer.Parent = logoButton
+logoContainer.BackgroundTransparency = 1
+logoContainer.Position = UDim2.new(0, 0, 0, 0)
+logoContainer.Size = UDim2.new(1, 0, 1, 0)
+
+-- Option 1: Custom Text Logo
+local logoText = Instance.new("TextLabel")
+logoText.Name = "LogoText"
+logoText.Parent = logoContainer
+logoText.BackgroundTransparency = 1
+logoText.Position = UDim2.new(0, 0, 0, 0)
+logoText.Size = UDim2.new(1, 0, 1, 0)
+logoText.Font = Enum.Font.GothamBold
+logoText.Text = "JS" -- Juned System initials
+logoText.TextColor3 = colors.text
+logoText.TextSize = 18
+logoText.TextScaled = true
+
+-- Option 2: Logo Icon (commented by default, you can enable this)
+--[[
+local logoIcon = Instance.new("ImageLabel")
+logoIcon.Name = "LogoIcon"
+logoIcon.Parent = logoContainer
+logoIcon.BackgroundTransparency = 1
+logoIcon.Position = UDim2.new(0, 10, 0, 10)
+logoIcon.Size = UDim2.new(0, 30, 0, 30)
+logoIcon.Image = "rbxassetid://7733658448" -- Settings/gear icon
+logoIcon.ImageColor3 = colors.text
+--]]
+
+-- Option 3: Combination Text + Icon (commented by default)
+--[[
+local logoIcon = Instance.new("ImageLabel")
+logoIcon.Name = "LogoIcon"
+logoIcon.Parent = logoContainer
+logoIcon.BackgroundTransparency = 1
+logoIcon.Position = UDim2.new(0, 5, 0, 5)
+logoIcon.Size = UDim2.new(0, 20, 0, 20)
+logoIcon.Image = "rbxassetid://7733658448"
+logoIcon.ImageColor3 = colors.text
+
+local logoSmallText = Instance.new("TextLabel")
+logoSmallText.Name = "LogoSmallText"
+logoSmallText.Parent = logoContainer
+logoSmallText.BackgroundTransparency = 1
+logoSmallText.Position = UDim2.new(0, 25, 0, 15)
+logoSmallText.Size = UDim2.new(0, 20, 0, 20)
+logoSmallText.Font = Enum.Font.GothamBold
+logoSmallText.Text = "JS"
+logoSmallText.TextColor3 = colors.text
+logoSmallText.TextSize = 12
+--]]
+
+-- Status Indicator on Logo
+local logoStatusIndicator = Instance.new("Frame")
+logoStatusIndicator.Name = "LogoStatusIndicator"
+logoStatusIndicator.Parent = logoButton
+logoStatusIndicator.BackgroundColor3 = colors.text_dim
+logoStatusIndicator.BorderSizePixel = 0
+logoStatusIndicator.Position = UDim2.new(1, -8, 0, 8)
+logoStatusIndicator.Size = UDim2.new(0, 6, 0, 6)
+
+local logoStatusCorner = Instance.new("UICorner")
+logoStatusCorner.CornerRadius = UDim.new(0.5, 0)
+logoStatusCorner.Parent = logoStatusIndicator
+
+-- Main Panel Container (Initially Hidden)
 local mainPanel = Instance.new("Frame")
 mainPanel.Name = "MainPanel"
 mainPanel.Parent = screenGui
-mainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-mainPanel.BorderSizePixel = 0
-mainPanel.Position = UDim2.new(1, -320, 0, 10)
-mainPanel.Size = UDim2.new(0, 310, 0, 420)
+mainPanel.BackgroundColor3 = colors.primary
+mainPanel.BorderSizePixel = 1
+mainPanel.BorderColor3 = colors.accent
+mainPanel.Position = UDim2.new(1, -340, 0, 20)
+mainPanel.Size = panelSize
+mainPanel.Visible = false
 mainPanel.Active = true
-mainPanel.Draggable = true
 
 local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.CornerRadius = UDim.new(0, 4)
 mainCorner.Parent = mainPanel
 
 -- Header Section
 local headerFrame = Instance.new("Frame")
 headerFrame.Name = "HeaderFrame"
 headerFrame.Parent = mainPanel
-headerFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+headerFrame.BackgroundColor3 = colors.secondary
 headerFrame.BorderSizePixel = 0
 headerFrame.Position = UDim2.new(0, 0, 0, 0)
-headerFrame.Size = UDim2.new(1, 0, 0, 70)
+headerFrame.Size = UDim2.new(1, 0, 0, 50)
 
 local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 12)
+headerCorner.CornerRadius = UDim.new(0, 4)
 headerCorner.Parent = headerFrame
 
--- Admin Shield Icon
-local shieldIcon = Instance.new("ImageLabel")
-shieldIcon.Name = "ShieldIcon"
-shieldIcon.Parent = headerFrame
-shieldIcon.BackgroundTransparency = 1
-shieldIcon.Position = UDim2.new(0, 15, 0, 15)
-shieldIcon.Size = UDim2.new(0, 40, 0, 40)
-shieldIcon.Image = "rbxassetid://8964116993"
-shieldIcon.ImageColor3 = Color3.fromRGB(255, 215, 0)
+-- Title Line
+local titleLine = Instance.new("Frame")
+titleLine.Name = "TitleLine"
+titleLine.Parent = headerFrame
+titleLine.BackgroundColor3 = colors.accent
+titleLine.BorderSizePixel = 0
+titleLine.Position = UDim2.new(0, 15, 0, 20)
+titleLine.Size = UDim2.new(0, 4, 0, 15)
 
--- Admin Title
-local adminLabel = Instance.new("TextLabel")
-adminLabel.Name = "AdminLabel"
-adminLabel.Parent = headerFrame
-adminLabel.BackgroundTransparency = 1
-adminLabel.Position = UDim2.new(0, 65, 0, 12)
-adminLabel.Size = UDim2.new(0, 235, 0, 25)
-adminLabel.Font = Enum.Font.GothamBold
-adminLabel.Text = "🛡️ UNIFIED ADMIN PANEL"
-adminLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-adminLabel.TextSize = 16
-adminLabel.TextStrokeTransparency = 0
-adminLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Parent = headerFrame
+titleLabel.BackgroundTransparency = 1
+titleLabel.Position = UDim2.new(0, 25, 0, 10)
+titleLabel.Size = UDim2.new(0, 280, 0, 30)
+titleLabel.Font = Enum.Font.Code
+titleLabel.Text = "JUNED SYSTEM"
+titleLabel.TextColor3 = colors.text
+titleLabel.TextSize = 16
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Status Indicator
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Name = "StatusLabel"
-statusLabel.Parent = headerFrame
-statusLabel.Position = UDim2.new(0, 65, 0, 38)
-statusLabel.Size = UDim2.new(0, 235, 0, 18)
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.Text = "● All Systems Ready"
-statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-statusLabel.TextSize = 12
+
+-- Status indicator
+local statusIndicator = Instance.new("Frame")
+statusIndicator.Name = "StatusIndicator"
+statusIndicator.Parent = headerFrame
+statusIndicator.BackgroundColor3 = colors.text_dim
+statusIndicator.BorderSizePixel = 0
+statusIndicator.Position = UDim2.new(1, -65, 0, 20)
+statusIndicator.Size = UDim2.new(0, 8, 0, 8)
+
+local statusCorner = Instance.new("UICorner")
+statusCorner.CornerRadius = UDim.new(0.5, 0)
+statusCorner.Parent = statusIndicator
 
 -- Speed Control Section
 local speedSection = Instance.new("Frame")
 speedSection.Name = "SpeedSection"
 speedSection.Parent = mainPanel
-speedSection.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-speedSection.BorderSizePixel = 0
-speedSection.Position = UDim2.new(0, 10, 0, 80)
-speedSection.Size = UDim2.new(0, 290, 0, 90)
+speedSection.BackgroundColor3 = colors.secondary
+speedSection.BorderSizePixel = 1
+speedSection.BorderColor3 = colors.tertiary
+speedSection.Position = UDim2.new(0, 15, 0, 60)
+speedSection.Size = UDim2.new(0, 290, 0, 100)
 
 local speedCorner = Instance.new("UICorner")
-speedCorner.CornerRadius = UDim.new(0, 8)
+speedCorner.CornerRadius = UDim.new(0, 3)
 speedCorner.Parent = speedSection
 
--- Speed Header
-local speedHeader = Instance.new("TextLabel")
-speedHeader.Name = "SpeedHeader"
-speedHeader.Parent = speedSection
-speedHeader.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
-speedHeader.BorderSizePixel = 0
-speedHeader.Position = UDim2.new(0, 0, 0, 0)
-speedHeader.Size = UDim2.new(1, 0, 0, 25)
-speedHeader.Font = Enum.Font.GothamBold
-speedHeader.Text = "🚀 SPEED CONTROL"
-speedHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedHeader.TextSize = 12
+-- Speed Section Header
+local speedSectionLabel = Instance.new("TextLabel")
+speedSectionLabel.Name = "SpeedSectionLabel"
+speedSectionLabel.Parent = speedSection
+speedSectionLabel.BackgroundTransparency = 1
+speedSectionLabel.Position = UDim2.new(0, 10, 0, 5)
+speedSectionLabel.Size = UDim2.new(0, 270, 0, 20)
+speedSectionLabel.Font = Enum.Font.Code
+speedSectionLabel.Text = "[01] LOCOMOTION_CONTROL"
+speedSectionLabel.TextColor3 = colors.text_dim
+speedSectionLabel.TextSize = 11
+speedSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local speedHeaderCorner = Instance.new("UICorner")
-speedHeaderCorner.CornerRadius = UDim.new(0, 8)
-speedHeaderCorner.Parent = speedHeader
+-- Toggle Switch Container
+local toggleContainer = Instance.new("Frame")
+toggleContainer.Name = "ToggleContainer"
+toggleContainer.Parent = speedSection
+toggleContainer.BackgroundTransparency = 1
+toggleContainer.Position = UDim2.new(0, 10, 0, 30)
+toggleContainer.Size = UDim2.new(0, 270, 0, 25)
 
--- Speed Toggle Button
-local toggleSpeedButton = Instance.new("TextButton")
-toggleSpeedButton.Name = "ToggleSpeedButton"
-toggleSpeedButton.Parent = speedSection
-toggleSpeedButton.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
-toggleSpeedButton.BorderSizePixel = 0
-toggleSpeedButton.Position = UDim2.new(0, 10, 0, 30)
-toggleSpeedButton.Size = UDim2.new(0, 130, 0, 28)
-toggleSpeedButton.Font = Enum.Font.GothamBold
-toggleSpeedButton.Text = "🚀 ACTIVATE"
-toggleSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleSpeedButton.TextSize = 11
+-- Toggle Label
+local toggleLabel = Instance.new("TextLabel")
+toggleLabel.Name = "ToggleLabel"
+toggleLabel.Parent = toggleContainer
+toggleLabel.BackgroundTransparency = 1
+toggleLabel.Position = UDim2.new(0, 0, 0, 0)
+toggleLabel.Size = UDim2.new(0, 200, 0, 25)
+toggleLabel.Font = Enum.Font.Code
+toggleLabel.Text = "SPEED_MODULATION"
+toggleLabel.TextColor3 = colors.text
+toggleLabel.TextSize = 12
+toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local toggleSpeedCorner = Instance.new("UICorner")
-toggleSpeedCorner.CornerRadius = UDim.new(0, 5)
-toggleSpeedCorner.Parent = toggleSpeedButton
+-- Toggle Switch Background
+local toggleSwitchBg = Instance.new("Frame")
+toggleSwitchBg.Name = "ToggleSwitchBg"
+toggleSwitchBg.Parent = toggleContainer
+toggleSwitchBg.BackgroundColor3 = colors.inactive
+toggleSwitchBg.BorderSizePixel = 0
+toggleSwitchBg.Position = UDim2.new(1, -50, 0, 2.5)
+toggleSwitchBg.Size = UDim2.new(0, 45, 0, 20)
+
+local toggleBgCorner = Instance.new("UICorner")
+toggleBgCorner.CornerRadius = UDim.new(0, 10)
+toggleBgCorner.Parent = toggleSwitchBg
+
+-- Toggle Switch Handle
+local toggleSwitch = Instance.new("Frame")
+toggleSwitch.Name = "ToggleSwitch"
+toggleSwitch.Parent = toggleSwitchBg
+toggleSwitch.BackgroundColor3 = colors.text_dim
+toggleSwitch.BorderSizePixel = 0
+toggleSwitch.Position = UDim2.new(0, 2, 0, 2)
+toggleSwitch.Size = UDim2.new(0, 16, 0, 16)
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 8)
+toggleCorner.Parent = toggleSwitch
+
+-- Toggle Button (invisible but clickable)
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Parent = toggleContainer
+toggleButton.BackgroundTransparency = 1
+toggleButton.Position = UDim2.new(1, -50, 0, 0)
+toggleButton.Size = UDim2.new(0, 45, 0, 25)
+toggleButton.Text = ""
+toggleButton.Font = Enum.Font.SourceSans
+toggleButton.TextSize = 1
+
+-- Speed Input Section
+local speedInputSection = Instance.new("Frame")
+speedInputSection.Name = "SpeedInputSection"
+speedInputSection.Parent = speedSection
+speedInputSection.BackgroundTransparency = 1
+speedInputSection.Position = UDim2.new(0, 10, 0, 60)
+speedInputSection.Size = UDim2.new(0, 270, 0, 30)
+
+-- Speed Label
+local speedValueLabel = Instance.new("TextLabel")
+speedValueLabel.Name = "SpeedValueLabel"
+speedValueLabel.Parent = speedInputSection
+speedValueLabel.BackgroundTransparency = 1
+speedValueLabel.Position = UDim2.new(0, 0, 0, 5)
+speedValueLabel.Size = UDim2.new(0, 80, 0, 20)
+speedValueLabel.Font = Enum.Font.Code
+speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+speedValueLabel.TextColor3 = colors.text_dim
+speedValueLabel.TextSize = 10
+speedValueLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Speed Input
 local speedInput = Instance.new("TextBox")
 speedInput.Name = "SpeedInput"
-speedInput.Parent = speedSection
-speedInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-speedInput.BorderSizePixel = 0
-speedInput.Position = UDim2.new(0, 150, 0, 30)
-speedInput.Size = UDim2.new(0, 60, 0, 28)
-speedInput.Font = Enum.Font.Gotham
-speedInput.PlaceholderText = "Speed"
+speedInput.Parent = speedInputSection
+speedInput.BackgroundColor3 = colors.tertiary
+speedInput.BorderSizePixel = 1
+speedInput.BorderColor3 = colors.accent
+speedInput.Position = UDim2.new(0, 85, 0, 5)
+speedInput.Size = UDim2.new(0, 60, 0, 20)
+speedInput.Font = Enum.Font.Code
+speedInput.PlaceholderText = "0-200"
 speedInput.Text = tostring(customWalkSpeed)
-speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedInput.TextSize = 11
+speedInput.TextColor3 = colors.text
+speedInput.TextSize = 10
 
-local speedInputCorner = Instance.new("UICorner")
-speedInputCorner.CornerRadius = UDim.new(0, 5)
-speedInputCorner.Parent = speedInput
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = UDim.new(0, 2)
+inputCorner.Parent = speedInput
 
--- Speed Display
-local speedDisplay = Instance.new("TextLabel")
-speedDisplay.Name = "SpeedDisplay"
-speedDisplay.Parent = speedSection
-speedDisplay.BackgroundTransparency = 1
-speedDisplay.Position = UDim2.new(0, 10, 0, 63)
-speedDisplay.Size = UDim2.new(1, -20, 0, 20)
-speedDisplay.Font = Enum.Font.Gotham
-speedDisplay.Text = "Current: " .. originalWalkSpeed .. " | Target: " .. customWalkSpeed
-speedDisplay.TextColor3 = Color3.fromRGB(200, 200, 200)
-speedDisplay.TextSize = 10
+-- Set Button
+local setButton = Instance.new("TextButton")
+setButton.Name = "SetButton"
+setButton.Parent = speedInputSection
+setButton.BackgroundColor3 = colors.tertiary
+setButton.BorderSizePixel = 1
+setButton.BorderColor3 = colors.accent
+setButton.Position = UDim2.new(0, 150, 0, 5)
+setButton.Size = UDim2.new(0, 40, 0, 20)
+setButton.Font = Enum.Font.Code
+setButton.Text = "SET"
+setButton.TextColor3 = colors.text
+setButton.TextSize = 10
+
+local setCorner = Instance.new("UICorner")
+setCorner.CornerRadius = UDim.new(0, 2)
+setCorner.Parent = setButton
+
+-- Current Status
+local currentStatusLabel = Instance.new("TextLabel")
+currentStatusLabel.Name = "CurrentStatusLabel"
+currentStatusLabel.Parent = speedInputSection
+currentStatusLabel.BackgroundTransparency = 1
+currentStatusLabel.Position = UDim2.new(0, 195, 0, 5)
+currentStatusLabel.Size = UDim2.new(0, 75, 0, 20)
+currentStatusLabel.Font = Enum.Font.Code
+currentStatusLabel.Text = "CUR:OFF"
+currentStatusLabel.TextColor3 = colors.text_dim
+currentStatusLabel.TextSize = 10
+currentStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Fly Control Section
 local flySection = Instance.new("Frame")
 flySection.Name = "FlySection"
 flySection.Parent = mainPanel
-flySection.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-flySection.BorderSizePixel = 0
-flySection.Position = UDim2.new(0, 10, 0, 180)
+flySection.BackgroundColor3 = colors.secondary
+flySection.BorderSizePixel = 1
+flySection.BorderColor3 = colors.tertiary
+flySection.Position = UDim2.new(0, 15, 0, 170)
 flySection.Size = UDim2.new(0, 290, 0, 90)
 
 local flyCorner = Instance.new("UICorner")
-flyCorner.CornerRadius = UDim.new(0, 8)
+flyCorner.CornerRadius = UDim.new(0, 3)
 flyCorner.Parent = flySection
 
--- Fly Header
-local flyHeader = Instance.new("TextLabel")
-flyHeader.Name = "FlyHeader"
-flyHeader.Parent = flySection
-flyHeader.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
-flyHeader.BorderSizePixel = 0
-flyHeader.Position = UDim2.new(0, 0, 0, 0)
-flyHeader.Size = UDim2.new(1, 0, 0, 25)
-flyHeader.Font = Enum.Font.GothamBold
-flyHeader.Text = "✈️ FLY MODE"
-flyHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
-flyHeader.TextSize = 12
+-- Fly Section Header
+local flySectionLabel = Instance.new("TextLabel")
+flySectionLabel.Name = "FlySectionLabel"
+flySectionLabel.Parent = flySection
+flySectionLabel.BackgroundTransparency = 1
+flySectionLabel.Position = UDim2.new(0, 10, 0, 5)
+flySectionLabel.Size = UDim2.new(0, 270, 0, 20)
+flySectionLabel.Font = Enum.Font.Code
+flySectionLabel.Text = "[02] AERIAL_NAVIGATION"
+flySectionLabel.TextColor3 = colors.text_dim
+flySectionLabel.TextSize = 11
+flySectionLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local flyHeaderCorner = Instance.new("UICorner")
-flyHeaderCorner.CornerRadius = UDim.new(0, 8)
-flyHeaderCorner.Parent = flyHeader
+-- Fly Toggle Switch Container
+local flyToggleContainer = Instance.new("Frame")
+flyToggleContainer.Name = "FlyToggleContainer"
+flyToggleContainer.Parent = flySection
+flyToggleContainer.BackgroundTransparency = 1
+flyToggleContainer.Position = UDim2.new(0, 10, 0, 30)
+flyToggleContainer.Size = UDim2.new(0, 270, 0, 25)
 
--- Fly Toggle Button
-local toggleFlyButton = Instance.new("TextButton")
-toggleFlyButton.Name = "ToggleFlyButton"
-toggleFlyButton.Parent = flySection
-toggleFlyButton.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
-toggleFlyButton.BorderSizePixel = 0
-toggleFlyButton.Position = UDim2.new(0, 10, 0, 30)
-toggleFlyButton.Size = UDim2.new(0, 130, 0, 28)
-toggleFlyButton.Font = Enum.Font.GothamBold
-toggleFlyButton.Text = "✈️ ENABLE FLY"
-toggleFlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleFlyButton.TextSize = 11
+-- Fly Toggle Label
+local flyToggleLabel = Instance.new("TextLabel")
+flyToggleLabel.Name = "FlyToggleLabel"
+flyToggleLabel.Parent = flyToggleContainer
+flyToggleLabel.BackgroundTransparency = 1
+flyToggleLabel.Position = UDim2.new(0, 0, 0, 0)
+flyToggleLabel.Size = UDim2.new(0, 200, 0, 25)
+flyToggleLabel.Font = Enum.Font.Code
+flyToggleLabel.Text = "AERIAL_NAVIGATION"
+flyToggleLabel.TextColor3 = colors.text
+flyToggleLabel.TextSize = 12
+flyToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local toggleFlyCorner = Instance.new("UICorner")
-toggleFlyCorner.CornerRadius = UDim.new(0, 5)
-toggleFlyCorner.Parent = toggleFlyButton
+-- Fly Toggle Switch Background
+local flyToggleSwitchBg = Instance.new("Frame")
+flyToggleSwitchBg.Name = "FlyToggleSwitchBg"
+flyToggleSwitchBg.Parent = flyToggleContainer
+flyToggleSwitchBg.BackgroundColor3 = colors.inactive
+flyToggleSwitchBg.BorderSizePixel = 0
+flyToggleSwitchBg.Position = UDim2.new(1, -50, 0, 2.5)
+flyToggleSwitchBg.Size = UDim2.new(0, 45, 0, 20)
+
+local flyToggleBgCorner = Instance.new("UICorner")
+flyToggleBgCorner.CornerRadius = UDim.new(0, 10)
+flyToggleBgCorner.Parent = flyToggleSwitchBg
+
+-- Fly Toggle Switch Handle
+local flyToggleSwitch = Instance.new("Frame")
+flyToggleSwitch.Name = "FlyToggleSwitch"
+flyToggleSwitch.Parent = flyToggleSwitchBg
+flyToggleSwitch.BackgroundColor3 = colors.text_dim
+flyToggleSwitch.BorderSizePixel = 0
+flyToggleSwitch.Position = UDim2.new(0, 2, 0, 2)
+flyToggleSwitch.Size = UDim2.new(0, 16, 0, 16)
+
+local flyToggleCorner = Instance.new("UICorner")
+flyToggleCorner.CornerRadius = UDim.new(0, 8)
+flyToggleCorner.Parent = flyToggleSwitch
+
+-- Fly Toggle Button (invisible but clickable)
+local flyToggleInvisibleButton = Instance.new("TextButton")
+flyToggleInvisibleButton.Name = "FlyToggleInvisibleButton"
+flyToggleInvisibleButton.Parent = flyToggleContainer
+flyToggleInvisibleButton.BackgroundTransparency = 1
+flyToggleInvisibleButton.Position = UDim2.new(1, -50, 0, 0)
+flyToggleInvisibleButton.Size = UDim2.new(0, 45, 0, 25)
+flyToggleInvisibleButton.Text = ""
+flyToggleInvisibleButton.Font = Enum.Font.SourceSans
+flyToggleInvisibleButton.TextSize = 1
 
 -- Fly Speed Input
 local flySpeedInput = Instance.new("TextBox")
 flySpeedInput.Name = "FlySpeedInput"
 flySpeedInput.Parent = flySection
-flySpeedInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-flySpeedInput.BorderSizePixel = 0
-flySpeedInput.Position = UDim2.new(0, 150, 0, 30)
-flySpeedInput.Size = UDim2.new(0, 60, 0, 28)
-flySpeedInput.Font = Enum.Font.Gotham
-flySpeedInput.PlaceholderText = "FlySpd"
+flySpeedInput.BackgroundColor3 = colors.tertiary
+flySpeedInput.BorderSizePixel = 1
+flySpeedInput.BorderColor3 = colors.accent
+flySpeedInput.Position = UDim2.new(0, 10, 0, 60)
+flySpeedInput.Size = UDim2.new(0, 60, 0, 20)
+flySpeedInput.Font = Enum.Font.Code
+flySpeedInput.PlaceholderText="VELOCITY"
 flySpeedInput.Text = tostring(flySpeed)
-flySpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-flySpeedInput.TextSize = 11
+flySpeedInput.TextColor3 = colors.text
+flySpeedInput.TextSize = 10
 
-local flySpeedInputCorner = Instance.new("UICorner")
-flySpeedInputCorner.CornerRadius = UDim.new(0, 5)
-flySpeedInputCorner.Parent = flySpeedInput
+local flyInputCorner = Instance.new("UICorner")
+flyInputCorner.CornerRadius = UDim.new(0, 2)
+flyInputCorner.Parent = flySpeedInput
 
 -- Fly Controls Info
 local flyControlsInfo = Instance.new("TextLabel")
 flyControlsInfo.Name = "FlyControlsInfo"
 flyControlsInfo.Parent = flySection
 flyControlsInfo.BackgroundTransparency = 1
-flyControlsInfo.Position = UDim2.new(0, 10, 0, 63)
-flyControlsInfo.Size = UDim2.new(1, -20, 0, 20)
-flyControlsInfo.Font = Enum.Font.Gotham
-flyControlsInfo.Text = "Controls: W/A/S/D/Space/Shift"
-flyControlsInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
-flyControlsInfo.TextSize = 10
+flyControlsInfo.Position = UDim2.new(0, 10, 0, 60)
+flyControlsInfo.Size = UDim2.new(0, 270, 0, 20)
+flyControlsInfo.Font = Enum.Font.Code
+flyControlsInfo.Text = "NAV: [W]FORWARD [S]BACKWARD [A]LEFT [D]RIGHT [SPACE]UP [SHIFT]DOWN"
+flyControlsInfo.TextColor3 = colors.text_dim
+flyControlsInfo.TextSize = 9
 
 -- Jump Control Section
 local jumpSection = Instance.new("Frame")
 jumpSection.Name = "JumpSection"
 jumpSection.Parent = mainPanel
-jumpSection.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-jumpSection.BorderSizePixel = 0
-jumpSection.Position = UDim2.new(0, 10, 0, 280)
-jumpSection.Size = UDim2.new(0, 290, 0, 90)
+jumpSection.BackgroundColor3 = colors.secondary
+jumpSection.BorderSizePixel = 1
+jumpSection.BorderColor3 = colors.tertiary
+jumpSection.Position = UDim2.new(0, 15, 0, 270)
+jumpSection.Size = UDim2.new(0, 290, 0, 120)
 
 local jumpCorner = Instance.new("UICorner")
-jumpCorner.CornerRadius = UDim.new(0, 8)
+jumpCorner.CornerRadius = UDim.new(0, 3)
 jumpCorner.Parent = jumpSection
 
--- Jump Header
-local jumpHeader = Instance.new("TextLabel")
-jumpHeader.Name = "JumpHeader"
-jumpHeader.Parent = jumpSection
-jumpHeader.BackgroundColor3 = Color3.fromRGB(255, 150, 50)
-jumpHeader.BorderSizePixel = 0
-jumpHeader.Position = UDim2.new(0, 0, 0, 0)
-jumpHeader.Size = UDim2.new(1, 0, 0, 25)
-jumpHeader.Font = Enum.Font.GothamBold
-jumpHeader.Text = "🦘 JUMP MODES"
-jumpHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
-jumpHeader.TextSize = 12
+-- Jump Section Header
+local jumpSectionLabel = Instance.new("TextLabel")
+jumpSectionLabel.Name = "JumpSectionLabel"
+jumpSectionLabel.Parent = jumpSection
+jumpSectionLabel.BackgroundTransparency = 1
+jumpSectionLabel.Position = UDim2.new(0, 10, 0, 5)
+jumpSectionLabel.Size = UDim2.new(0, 270, 0, 20)
+jumpSectionLabel.Font = Enum.Font.Code
+jumpSectionLabel.Text = "[03] VERTICAL_PROPULSION"
+jumpSectionLabel.TextColor3 = colors.text_dim
+jumpSectionLabel.TextSize = 11
+jumpSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local jumpHeaderCorner = Instance.new("UICorner")
-jumpHeaderCorner.CornerRadius = UDim.new(0, 8)
-jumpHeaderCorner.Parent = jumpHeader
+-- Infinity Jump Toggle Container
+local infinityToggleContainer = Instance.new("Frame")
+infinityToggleContainer.Name = "InfinityToggleContainer"
+infinityToggleContainer.Parent = jumpSection
+infinityToggleContainer.BackgroundTransparency = 1
+infinityToggleContainer.Position = UDim2.new(0, 10, 0, 30)
+infinityToggleContainer.Size = UDim2.new(0, 270, 0, 25)
 
--- Infinity Jump Button
-local toggleInfinityJumpButton = Instance.new("TextButton")
-toggleInfinityJumpButton.Name = "ToggleInfinityJumpButton"
-toggleInfinityJumpButton.Parent = jumpSection
-toggleInfinityJumpButton.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
-toggleInfinityJumpButton.BorderSizePixel = 0
-toggleInfinityJumpButton.Position = UDim2.new(0, 10, 0, 30)
-toggleInfinityJumpButton.Size = UDim2.new(0, 130, 0, 28)
-toggleInfinityJumpButton.Font = Enum.Font.GothamBold
-toggleInfinityJumpButton.Text = "♾️ INFINITY JUMP"
-toggleInfinityJumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleInfinityJumpButton.TextSize = 10
+-- Infinity Toggle Label
+local infinityToggleLabel = Instance.new("TextLabel")
+infinityToggleLabel.Name = "InfinityToggleLabel"
+infinityToggleLabel.Parent = infinityToggleContainer
+infinityToggleLabel.BackgroundTransparency = 1
+infinityToggleLabel.Position = UDim2.new(0, 0, 0, 0)
+infinityToggleLabel.Size = UDim2.new(0, 200, 0, 25)
+infinityToggleLabel.Font = Enum.Font.Code
+infinityToggleLabel.Text = "INFINITE_JUMP"
+infinityToggleLabel.TextColor3 = colors.text
+infinityToggleLabel.TextSize = 11
+infinityToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local infinityJumpCorner = Instance.new("UICorner")
-infinityJumpCorner.CornerRadius = UDim.new(0, 5)
-infinityJumpCorner.Parent = toggleInfinityJumpButton
+-- Infinity Toggle Switch Background
+local infinityToggleSwitchBg = Instance.new("Frame")
+infinityToggleSwitchBg.Name = "InfinityToggleSwitchBg"
+infinityToggleSwitchBg.Parent = infinityToggleContainer
+infinityToggleSwitchBg.BackgroundColor3 = colors.inactive
+infinityToggleSwitchBg.BorderSizePixel = 0
+infinityToggleSwitchBg.Position = UDim2.new(1, -50, 0, 2.5)
+infinityToggleSwitchBg.Size = UDim2.new(0, 45, 0, 20)
 
--- High Jump Button
-local toggleHighJumpButton = Instance.new("TextButton")
-toggleHighJumpButton.Name = "ToggleHighJumpButton"
-toggleHighJumpButton.Parent = jumpSection
-toggleHighJumpButton.BackgroundColor3 = Color3.fromRGB(255, 100, 150)
-toggleHighJumpButton.BorderSizePixel = 0
-toggleHighJumpButton.Position = UDim2.new(0, 150, 0, 30)
-toggleHighJumpButton.Size = UDim2.new(0, 130, 0, 28)
-toggleHighJumpButton.Font = Enum.Font.GothamBold
-toggleHighJumpButton.Text = "🔝 HIGH JUMP"
-toggleHighJumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleHighJumpButton.TextSize = 10
+local infinityToggleBgCorner = Instance.new("UICorner")
+infinityToggleBgCorner.CornerRadius = UDim.new(0, 10)
+infinityToggleBgCorner.Parent = infinityToggleSwitchBg
 
-local highJumpCorner = Instance.new("UICorner")
-highJumpCorner.CornerRadius = UDim.new(0, 5)
-highJumpCorner.Parent = toggleHighJumpButton
+-- Infinity Toggle Switch Handle
+local infinityToggleSwitch = Instance.new("Frame")
+infinityToggleSwitch.Name = "InfinityToggleSwitch"
+infinityToggleSwitch.Parent = infinityToggleSwitchBg
+infinityToggleSwitch.BackgroundColor3 = colors.text_dim
+infinityToggleSwitch.BorderSizePixel = 0
+infinityToggleSwitch.Position = UDim2.new(0, 2, 0, 2)
+infinityToggleSwitch.Size = UDim2.new(0, 16, 0, 16)
 
--- Jump Status
-local jumpStatus = Instance.new("TextLabel")
-jumpStatus.Name = "JumpStatus"
-jumpStatus.Parent = jumpSection
-jumpStatus.BackgroundTransparency = 1
-jumpStatus.Position = UDim2.new(0, 10, 0, 63)
-jumpStatus.Size = UDim2.new(1, -20, 0, 20)
-jumpStatus.Font = Enum.Font.Gotham
-jumpStatus.Text = "Jump Power: " .. defaultJumpPower
-jumpStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
-jumpStatus.TextSize = 10
+local infinityToggleCorner = Instance.new("UICorner")
+infinityToggleCorner.CornerRadius = UDim.new(0, 8)
+infinityToggleCorner.Parent = infinityToggleSwitch
+
+-- Infinity Toggle Button (invisible but clickable)
+local infinityToggleInvisibleButton = Instance.new("TextButton")
+infinityToggleInvisibleButton.Name = "InfinityToggleInvisibleButton"
+infinityToggleInvisibleButton.Parent = infinityToggleContainer
+infinityToggleInvisibleButton.BackgroundTransparency = 1
+infinityToggleInvisibleButton.Position = UDim2.new(1, -50, 0, 0)
+infinityToggleInvisibleButton.Size = UDim2.new(0, 45, 0, 25)
+infinityToggleInvisibleButton.Text = ""
+infinityToggleInvisibleButton.Font = Enum.Font.SourceSans
+infinityToggleInvisibleButton.TextSize = 1
+
+-- High Jump Toggle Container
+local highJumpToggleContainer = Instance.new("Frame")
+highJumpToggleContainer.Name = "HighJumpToggleContainer"
+highJumpToggleContainer.Parent = jumpSection
+highJumpToggleContainer.BackgroundTransparency = 1
+highJumpToggleContainer.Position = UDim2.new(0, 10, 0, 60)
+highJumpToggleContainer.Size = UDim2.new(0, 270, 0, 25)
+
+-- High Jump Toggle Label
+local highJumpToggleLabel = Instance.new("TextLabel")
+highJumpToggleLabel.Name = "HighJumpToggleLabel"
+highJumpToggleLabel.Parent = highJumpToggleContainer
+highJumpToggleLabel.BackgroundTransparency = 1
+highJumpToggleLabel.Position = UDim2.new(0, 0, 0, 0)
+highJumpToggleLabel.Size = UDim2.new(0, 200, 0, 25)
+highJumpToggleLabel.Font = Enum.Font.Code
+highJumpToggleLabel.Text = "AMPLIFIED_JUMP"
+highJumpToggleLabel.TextColor3 = colors.text
+highJumpToggleLabel.TextSize = 11
+highJumpToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- High Jump Toggle Switch Background
+local highJumpToggleSwitchBg = Instance.new("Frame")
+highJumpToggleSwitchBg.Name = "HighJumpToggleSwitchBg"
+highJumpToggleSwitchBg.Parent = highJumpToggleContainer
+highJumpToggleSwitchBg.BackgroundColor3 = colors.inactive
+highJumpToggleSwitchBg.BorderSizePixel = 0
+highJumpToggleSwitchBg.Position = UDim2.new(1, -50, 0, 2.5)
+highJumpToggleSwitchBg.Size = UDim2.new(0, 45, 0, 20)
+
+local highJumpToggleBgCorner = Instance.new("UICorner")
+highJumpToggleBgCorner.CornerRadius = UDim.new(0, 10)
+highJumpToggleBgCorner.Parent = highJumpToggleSwitchBg
+
+-- High Jump Toggle Switch Handle
+local highJumpToggleSwitch = Instance.new("Frame")
+highJumpToggleSwitch.Name = "HighJumpToggleSwitch"
+highJumpToggleSwitch.Parent = highJumpToggleSwitchBg
+highJumpToggleSwitch.BackgroundColor3 = colors.text_dim
+highJumpToggleSwitch.BorderSizePixel = 0
+highJumpToggleSwitch.Position = UDim2.new(0, 2, 0, 2)
+highJumpToggleSwitch.Size = UDim2.new(0, 16, 0, 16)
+
+local highJumpToggleCorner = Instance.new("UICorner")
+highJumpToggleCorner.CornerRadius = UDim.new(0, 8)
+highJumpToggleCorner.Parent = highJumpToggleSwitch
+
+-- High Jump Toggle Button (invisible but clickable)
+local highJumpToggleInvisibleButton = Instance.new("TextButton")
+highJumpToggleInvisibleButton.Name = "HighJumpToggleInvisibleButton"
+highJumpToggleInvisibleButton.Parent = highJumpToggleContainer
+highJumpToggleInvisibleButton.BackgroundTransparency = 1
+highJumpToggleInvisibleButton.Position = UDim2.new(1, -50, 0, 0)
+highJumpToggleInvisibleButton.Size = UDim2.new(0, 45, 0, 25)
+highJumpToggleInvisibleButton.Text = ""
+highJumpToggleInvisibleButton.Font = Enum.Font.SourceSans
+highJumpToggleInvisibleButton.TextSize = 1
+
+-- Jump Power Display
+local jumpPowerDisplay = Instance.new("TextLabel")
+jumpPowerDisplay.Name = "JumpPowerDisplay"
+jumpPowerDisplay.Parent = jumpSection
+jumpPowerDisplay.BackgroundTransparency = 1
+jumpPowerDisplay.Position = UDim2.new(0, 10, 0, 90)
+jumpPowerDisplay.Size = UDim2.new(0, 270, 0, 20)
+jumpPowerDisplay.Font = Enum.Font.Code
+jumpPowerDisplay.Text = "POWER: " .. defaultJumpPower .. " | STATUS: INACTIVE"
+jumpPowerDisplay.TextColor3 = colors.text
+jumpPowerDisplay.TextSize = 9
 
 -- Quick Controls Section
 local quickControls = Instance.new("Frame")
 quickControls.Name = "QuickControls"
 quickControls.Parent = mainPanel
-quickControls.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-quickControls.BorderSizePixel = 0
-quickControls.Position = UDim2.new(0, 10, 0, 380)
-quickControls.Size = UDim2.new(0, 290, 0, 30)
+quickControls.BackgroundColor3 = colors.secondary
+quickControls.BorderSizePixel = 1
+quickControls.BorderColor3 = colors.tertiary
+quickControls.Position = UDim2.new(0, 15, 0, 400)
+quickControls.Size = UDim2.new(0, 290, 0, 75)
 
 local quickCorner = Instance.new("UICorner")
-quickCorner.CornerRadius = UDim.new(0, 8)
+quickCorner.CornerRadius = UDim.new(0, 3)
 quickCorner.Parent = quickControls
 
--- Speed Presets
+-- Quick Controls Header
+local quickHeader = Instance.new("TextLabel")
+quickHeader.Name = "QuickHeader"
+quickHeader.Parent = quickControls
+quickHeader.BackgroundTransparency = 1
+quickHeader.Position = UDim2.new(0, 10, 0, 5)
+quickHeader.Size = UDim2.new(0, 270, 0, 20)
+quickHeader.Font = Enum.Font.Code
+quickHeader.Text = "[04] RAPID_PRESETS"
+quickHeader.TextColor3 = colors.text_dim
+quickHeader.TextSize = 11
+quickHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Preset Buttons
 local presetSpeeds = {25, 50, 100, 150}
 for i, speed in ipairs(presetSpeeds) do
     local presetButton = Instance.new("TextButton")
     presetButton.Name = "Preset" .. speed
     presetButton.Parent = quickControls
-    presetButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-    presetButton.BorderSizePixel = 0
-    presetButton.Position = UDim2.new(0, 10 + (i-1) * 70, 0, 5)
+    presetButton.BackgroundColor3 = colors.tertiary
+    presetButton.BorderSizePixel = 1
+    presetButton.BorderColor3 = colors.accent
+    presetButton.Position = UDim2.new(0, 10 + (i-1) * 70, 0, 30)
     presetButton.Size = UDim2.new(0, 65, 0, 20)
-    presetButton.Font = Enum.Font.GothamBold
-    presetButton.Text = "Speed x" .. speed
-    presetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    presetButton.Font = Enum.Font.Code
+    presetButton.Text = "SPEED_" .. speed
+    presetButton.TextColor3 = colors.text
     presetButton.TextSize = 9
 
     local presetCorner = Instance.new("UICorner")
-    presetCorner.CornerRadius = UDim.new(0, 4)
+    presetCorner.CornerRadius = UDim.new(0, 2)
     presetCorner.Parent = presetButton
 
     presetButton.MouseButton1Click:Connect(function()
@@ -376,28 +692,127 @@ for i, speed in ipairs(presetSpeeds) do
     end)
 
     presetButton.MouseEnter:Connect(function()
-        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 80, 90)}):Play()
+        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
     end)
 
     presetButton.MouseLeave:Connect(function()
-        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
     end)
 end
 
 -- Functions
+local function togglePanelVisibility()
+    isPanelVisible = not isPanelVisible
+
+    if isPanelVisible then
+        -- Show panel
+        mainPanel.Visible = true
+
+        -- Position panel relative to logo button
+        local logoPos = logoButton.Position
+        mainPanel.Position = UDim2.new(logoPos.X.Scale, logoPos.X.Offset - 280, logoPos.Y.Scale, logoPos.Y.Offset + 60)
+
+        -- Smooth fade in animation
+        mainPanel.BackgroundTransparency = 1
+        for i = 1, 10 do
+            mainPanel.BackgroundTransparency = 1 - (i * 0.1)
+            task.wait(0.02)
+        end
+
+        -- Rotate logo container to indicate active state
+        TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 90}):Play()
+
+        -- Update logo status indicator
+        logoStatusIndicator.BackgroundColor3 = colors.text
+        TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 8, 0, 8)}):Play()
+
+        showNotification("PANEL_STATE: VISIBLE")
+    else
+        -- Hide panel
+        mainPanel.BackgroundTransparency = 1
+        mainPanel.Visible = false
+
+        -- Rotate logo container back to normal
+        TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 0}):Play()
+
+        -- Update logo status indicator
+        logoStatusIndicator.BackgroundColor3 = colors.text_dim
+        TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 6, 0, 6)}):Play()
+
+        showNotification("PANEL_STATE: HIDDEN")
+    end
+end
+
+local function updateToggleSwitch(enabled)
+    if enabled then
+        TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+        toggleSwitch.BackgroundColor3 = colors.text
+    else
+        TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+        toggleSwitch.BackgroundColor3 = colors.text_dim
+    end
+end
+
+local function updateFlyToggleSwitch(enabled)
+    if enabled then
+        TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+        flyToggleSwitch.BackgroundColor3 = colors.text
+    else
+        TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+        flyToggleSwitch.BackgroundColor3 = colors.text_dim
+    end
+end
+
+local function updateInfinityToggleSwitch(enabled)
+    if enabled then
+        TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+        infinityToggleSwitch.BackgroundColor3 = colors.text
+    else
+        TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+        infinityToggleSwitch.BackgroundColor3 = colors.text_dim
+    end
+end
+
+local function updateHighJumpToggleSwitch(enabled)
+    if enabled then
+        TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+        highJumpToggleSwitch.BackgroundColor3 = colors.text
+    else
+        TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+        highJumpToggleSwitch.BackgroundColor3 = colors.text_dim
+    end
+end
+
+local function updateStatus(active)
+    if active then
+        statusIndicator.BackgroundColor3 = colors.text
+        TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 12, 0, 12)}):Play()
+    else
+        statusIndicator.BackgroundColor3 = colors.text_dim
+        TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 8, 0, 8)}):Play()
+    end
+end
+
 local function enableCustomSpeed()
     if isSpeedEnabled then return end
 
     isSpeedEnabled = true
     humanoid.WalkSpeed = customWalkSpeed
-    toggleSpeedButton.Text = "🛑 DEACTIVATE"
-    toggleSpeedButton.BackgroundColor3 = Color3.fromRGB(250, 50, 50)
-    speedDisplay.Text = "Current: " .. customWalkSpeed .. " | Target: " .. customWalkSpeed
+    updateToggleSwitch(true)
+    speedValueLabel.Text = "VAL:" .. customWalkSpeed
+    currentStatusLabel.Text = "CUR:ON"
+    currentStatusLabel.TextColor3 = colors.text
+    updateStatus(true)
 
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 135, 0, 28)}):Play()
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 130, 0, 28)}):Play()
-
-    updateStatus("Speed Activated", Color3.fromRGB(50, 255, 50))
+    showNotification("SPEED_MODULATION: ENABLED")
 end
 
 local function disableCustomSpeed()
@@ -405,14 +820,13 @@ local function disableCustomSpeed()
 
     isSpeedEnabled = false
     humanoid.WalkSpeed = originalWalkSpeed
-    toggleSpeedButton.Text = "🚀 ACTIVATE"
-    toggleSpeedButton.BackgroundColor3 = Color3.fromRGB(50, 150, 250)
-    speedDisplay.Text = "Current: " .. originalWalkSpeed .. " | Target: " .. customWalkSpeed
+    updateToggleSwitch(false)
+    speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+    currentStatusLabel.Text = "CUR:OFF"
+    currentStatusLabel.TextColor3 = colors.text_dim
+    updateStatus(false)
 
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 135, 0, 28)}):Play()
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 130, 0, 28)}):Play()
-
-    updateStatus("Speed Deactivated", Color3.fromRGB(255, 150, 50))
+    showNotification("SPEED_MODULATION: DISABLED")
 end
 
 local function updateCustomSpeed(newSpeed)
@@ -423,13 +837,19 @@ local function updateCustomSpeed(newSpeed)
 
         if isSpeedEnabled then
             humanoid.WalkSpeed = customWalkSpeed
-            speedDisplay.Text = "Current: " .. customWalkSpeed .. " | Target: " .. customWalkSpeed
-        else
-            speedDisplay.Text = "Current: " .. originalWalkSpeed .. " | Target: " .. customWalkSpeed
+            speedValueLabel.Text = "VAL:" .. customWalkSpeed
         end
     else
         speedInput.Text = tostring(customWalkSpeed)
     end
+end
+
+local function showNotification(message)
+    StarterGui:SetCore("ChatMakeSystemMessage", {
+        Text = "[SYSTEM] " .. message;
+        Color = colors.text;
+        Font = Enum.Font.Code;
+    })
 end
 
 -- Fly Functions
@@ -437,8 +857,7 @@ local function enableFly()
     if isFlying then return end
 
     isFlying = true
-    toggleFlyButton.Text = "🛑 DISABLE FLY"
-    toggleFlyButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    updateFlyToggleSwitch(true)
 
     -- Create fly components
     bv = Instance.new("BodyVelocity")
@@ -453,15 +872,14 @@ local function enableFly()
 
     humanoid.PlatformStand = true
 
-    updateStatus("Fly Mode Activated", Color3.fromRGB(100, 150, 255))
+    showNotification("AERIAL_NAVIGATION: ENABLED")
 end
 
 local function disableFly()
     if not isFlying then return end
 
     isFlying = false
-    toggleFlyButton.Text = "✈️ ENABLE FLY"
-    toggleFlyButton.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+    updateFlyToggleSwitch(false)
 
     if bv then
         bv:Destroy()
@@ -475,7 +893,7 @@ local function disableFly()
 
     humanoid.PlatformStand = false
 
-    updateStatus("Fly Mode Deactivated", Color3.fromRGB(255, 150, 50))
+    showNotification("AERIAL_NAVIGATION: DISABLED")
 end
 
 local function updateFlySpeed(newSpeed)
@@ -493,20 +911,18 @@ local function enableInfinityJump()
     if isInfinityJumpEnabled then return end
 
     isInfinityJumpEnabled = true
-    toggleInfinityJumpButton.Text = "♾️ INFINITY [ON]"
-    toggleInfinityJumpButton.BackgroundColor3 = Color3.fromRGB(200, 150, 255)
+    updateInfinityToggleSwitch(true)
 
-    updateStatus("Infinity Jump Enabled", Color3.fromRGB(150, 100, 255))
+    showNotification("INFINITE_JUMP: ENABLED")
 end
 
 local function disableInfinityJump()
     if not isInfinityJumpEnabled then return end
 
     isInfinityJumpEnabled = false
-    toggleInfinityJumpButton.Text = "♾️ INFINITY JUMP"
-    toggleInfinityJumpButton.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
+    updateInfinityToggleSwitch(false)
 
-    updateStatus("Infinity Jump Disabled", Color3.fromRGB(255, 150, 50))
+    showNotification("INFINITE_JUMP: DISABLED")
 end
 
 local function enableHighJump()
@@ -514,11 +930,10 @@ local function enableHighJump()
 
     isHighJumpEnabled = true
     humanoid.JumpPower = highJumpPower
-    toggleHighJumpButton.Text = "🔝 HIGH [ON]"
-    toggleHighJumpButton.BackgroundColor3 = Color3.fromRGB(255, 150, 200)
-    jumpStatus.Text = "Jump Power: " .. highJumpPower
+    updateHighJumpToggleSwitch(true)
+    jumpPowerDisplay.Text = "POWER: " .. highJumpPower .. " | STATUS: ACTIVE"
 
-    updateStatus("High Jump Enabled", Color3.fromRGB(255, 100, 150))
+    showNotification("AMPLIFIED_JUMP: ENABLED")
 end
 
 local function disableHighJump()
@@ -526,31 +941,39 @@ local function disableHighJump()
 
     isHighJumpEnabled = false
     humanoid.JumpPower = originalJumpPower
-    toggleHighJumpButton.Text = "🔝 HIGH JUMP"
-    toggleHighJumpButton.BackgroundColor3 = Color3.fromRGB(255, 100, 150)
-    jumpStatus.Text = "Jump Power: " .. originalJumpPower
+    updateHighJumpToggleSwitch(false)
+    jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
 
-    updateStatus("High Jump Disabled", Color3.fromRGB(255, 150, 50))
-end
-
-local function updateStatus(message, color)
-    statusLabel.Text = "● " .. message
-    statusLabel.TextColor3 = color
-
-    StarterGui:SetCore("ChatMakeSystemMessage", {
-        Text = "[ADMIN] " .. message;
-        Color = color;
-        Font = Enum.Font.GothamBold;
-    })
+    showNotification("AMPLIFIED_JUMP: DISABLED")
 end
 
 -- Button Events
-toggleSpeedButton.MouseButton1Click:Connect(function()
+-- Logo button for show/hide panel
+logoButton.MouseButton1Click:Connect(function()
+    togglePanelVisibility()
+end)
+
+-- Logo button hover effects
+logoButton.MouseEnter:Connect(function()
+    TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.active}):Play()
+    TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.accent}):Play()
+end)
+
+logoButton.MouseLeave:Connect(function()
+    TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.text}):Play()
+    TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.primary}):Play()
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
     if isSpeedEnabled then
         disableCustomSpeed()
     else
         enableCustomSpeed()
     end
+end)
+
+setButton.MouseButton1Click:Connect(function()
+    updateCustomSpeed(speedInput.Text)
 end)
 
 speedInput.FocusLost:Connect(function(enterPressed)
@@ -559,7 +982,8 @@ speedInput.FocusLost:Connect(function(enterPressed)
     end
 end)
 
-toggleFlyButton.MouseButton1Click:Connect(function()
+-- Fly toggle button event
+flyToggleInvisibleButton.MouseButton1Click:Connect(function()
     if isFlying then
         disableFly()
     else
@@ -573,7 +997,8 @@ flySpeedInput.FocusLost:Connect(function(enterPressed)
     end
 end)
 
-toggleInfinityJumpButton.MouseButton1Click:Connect(function()
+-- Infinity jump toggle button event
+infinityToggleInvisibleButton.MouseButton1Click:Connect(function()
     if isInfinityJumpEnabled then
         disableInfinityJump()
     else
@@ -581,7 +1006,8 @@ toggleInfinityJumpButton.MouseButton1Click:Connect(function()
     end
 end)
 
-toggleHighJumpButton.MouseButton1Click:Connect(function()
+-- High jump toggle button event
+highJumpToggleInvisibleButton.MouseButton1Click:Connect(function()
     if isHighJumpEnabled then
         disableHighJump()
     else
@@ -590,62 +1016,93 @@ toggleHighJumpButton.MouseButton1Click:Connect(function()
 end)
 
 -- Hover Effects
-toggleSpeedButton.MouseEnter:Connect(function()
-    local hoverColor = isSpeedEnabled and Color3.fromRGB(255, 75, 75) or Color3.fromRGB(70, 170, 255)
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+toggleButton.MouseEnter:Connect(function()
+    TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
 end)
 
-toggleSpeedButton.MouseLeave:Connect(function()
-    local normalColor = isSpeedEnabled and Color3.fromRGB(250, 50, 50) or Color3.fromRGB(50, 150, 250)
-    TweenService:Create(toggleSpeedButton, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+toggleButton.MouseLeave:Connect(function()
+    if isSpeedEnabled then
+        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+    else
+        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+    end
 end)
 
-toggleFlyButton.MouseEnter:Connect(function()
-    local hoverColor = isFlying and Color3.fromRGB(255, 75, 75) or Color3.fromRGB(120, 170, 255)
-    TweenService:Create(toggleFlyButton, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+setButton.MouseEnter:Connect(function()
+    TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
 end)
 
-toggleFlyButton.MouseLeave:Connect(function()
-    local normalColor = isFlying and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(100, 150, 255)
-    TweenService:Create(toggleFlyButton, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+setButton.MouseLeave:Connect(function()
+    TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
 end)
 
-toggleInfinityJumpButton.MouseEnter:Connect(function()
-    local hoverColor = isInfinityJumpEnabled and Color3.fromRGB(220, 170, 255) or Color3.fromRGB(170, 120, 255)
-    TweenService:Create(toggleInfinityJumpButton, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+-- Fly toggle hover effects
+flyToggleInvisibleButton.MouseEnter:Connect(function()
+    if isFlying then
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    else
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    end
 end)
 
-toggleInfinityJumpButton.MouseLeave:Connect(function()
-    local normalColor = isInfinityJumpEnabled and Color3.fromRGB(200, 150, 255) or Color3.fromRGB(150, 100, 255)
-    TweenService:Create(toggleInfinityJumpButton, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+flyToggleInvisibleButton.MouseLeave:Connect(function()
+    if isFlying then
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+    else
+        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+    end
 end)
 
-toggleHighJumpButton.MouseEnter:Connect(function()
-    local hoverColor = isHighJumpEnabled and Color3.fromRGB(255, 170, 220) or Color3.fromRGB(255, 120, 170)
-    TweenService:Create(toggleHighJumpButton, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+-- Infinity jump toggle hover effects
+infinityToggleInvisibleButton.MouseEnter:Connect(function()
+    if isInfinityJumpEnabled then
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    else
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    end
 end)
 
-toggleHighJumpButton.MouseLeave:Connect(function()
-    local normalColor = isHighJumpEnabled and Color3.fromRGB(255, 150, 200) or Color3.fromRGB(255, 100, 150)
-    TweenService:Create(toggleHighJumpButton, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+infinityToggleInvisibleButton.MouseLeave:Connect(function()
+    if isInfinityJumpEnabled then
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+    else
+        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+    end
 end)
 
--- Fly Control
+-- High jump toggle hover effects
+highJumpToggleInvisibleButton.MouseEnter:Connect(function()
+    if isHighJumpEnabled then
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    else
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+    end
+end)
+
+highJumpToggleInvisibleButton.MouseLeave:Connect(function()
+    if isHighJumpEnabled then
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+    else
+        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+    end
+end)
+
+-- Fly Control (FIXED: W now goes forward, S goes backward)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed or not isFlying then return end
 
     if input.KeyCode == Enum.KeyCode.W then
-        flyDirection = Vector3.new(0, 0, -1)
+        flyDirection = Vector3.new(0, 0, 1)   -- Forward (positive Z)
     elseif input.KeyCode == Enum.KeyCode.S then
-        flyDirection = Vector3.new(0, 0, 1)
+        flyDirection = Vector3.new(0, 0, -1)  -- Backward (negative Z)
     elseif input.KeyCode == Enum.KeyCode.A then
-        flyDirection = Vector3.new(-1, 0, 0)
+        flyDirection = Vector3.new(-1, 0, 0)  -- Left
     elseif input.KeyCode == Enum.KeyCode.D then
-        flyDirection = Vector3.new(1, 0, 0)
+        flyDirection = Vector3.new(1, 0, 0)   -- Right
     elseif input.KeyCode == Enum.KeyCode.Space then
-        flyDirection = Vector3.new(0, 1, 0)
+        flyDirection = Vector3.new(0, 1, 0)   -- Up
     elseif input.KeyCode == Enum.KeyCode.LeftShift then
-        flyDirection = Vector3.new(0, -1, 0)
+        flyDirection = Vector3.new(0, -1, 0)  -- Down
     end
 end)
 
@@ -689,7 +1146,7 @@ end)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
 
-    -- Speed toggles
+    -- Speed toggle
     if input.KeyCode == Enum.KeyCode.X then
         if isSpeedEnabled then
             disableCustomSpeed()
@@ -734,8 +1191,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         flySpeed = 100
         speedInput.Text = tostring(customWalkSpeed)
         flySpeedInput.Text = tostring(flySpeed)
-        speedDisplay.Text = "Current: " .. originalWalkSpeed .. " | Target: " .. customWalkSpeed
-        updateStatus("All Features Reset", Color3.fromRGB(255, 255, 0))
+        speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+        showNotification("SYSTEM_RESET: COMPLETE")
     end
 end)
 
@@ -745,8 +1202,8 @@ player.CharacterAdded:Connect(function(newCharacter)
     humanoid = character:WaitForChild("Humanoid")
     originalWalkSpeed = humanoid.WalkSpeed
     originalJumpPower = humanoid.JumpPower
-    speedDisplay.Text = "Current: " .. originalWalkSpeed .. " | Target: " .. customWalkSpeed
-    jumpStatus.Text = "Jump Power: " .. originalJumpPower
+    speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+    jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
 
     -- Reset all features on respawn
     disableCustomSpeed()
@@ -763,8 +1220,7 @@ humanoid.Died:Connect(function()
     if isHighJumpEnabled then disableHighJump() end
 end)
 
-print("🛡️ Unified Admin Panel loaded successfully!")
-print("Features: Speed, Fly, Infinity Jump, High Jump - All in One Panel!")
-print("Shortcuts: X=Speed, F=Fly, J=Infinity Jump, H=High Jump")
-print("Ctrl+R = Reset All Features")
-print("Fly Controls: W/A/S/D/Space/Shift")
+print("[SYSTEM] .SYSTEM: INITIALIZED")
+print("[KEYBINDS] X:SPEED F:FLY J:INFINITE_JUMP H:HIGH_JUMP")
+print("[RESET] CTRL+R: SYSTEM_RESET")
+print("[FLIGHT_CONTROLS] W:FORWARD S:BACKWARD A:LEFT D:RIGHT SPACE:UP SHIFT:DOWN")
