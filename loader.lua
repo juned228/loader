@@ -43,14 +43,14 @@ local originalJumpPower = humanoid.JumpPower
 
 -- Color scheme (monochrome)
 local colors = {
-    primary = Color3.fromRGB(20, 20, 20),
-    secondary = Color3.fromRGB(35, 35, 35),
-    tertiary = Color3.fromRGB(50, 50, 50),
-    accent = Color3.fromRGB(70, 70, 70),
-    text = Color3.fromRGB(255, 255, 255),
-    text_dim = Color3.fromRGB(180, 180, 180),
-    active = Color3.fromRGB(100, 100, 100),
-    inactive = Color3.fromRGB(40, 40, 40)
+	primary = Color3.fromRGB(20, 20, 20),
+	secondary = Color3.fromRGB(35, 35, 35),
+	tertiary = Color3.fromRGB(50, 50, 50),
+	accent = Color3.fromRGB(70, 70, 70),
+	text = Color3.fromRGB(255, 255, 255),
+	text_dim = Color3.fromRGB(180, 180, 180),
+	active = Color3.fromRGB(100, 100, 100),
+	inactive = Color3.fromRGB(40, 40, 40)
 }
 
 -- Create Minimal GUI
@@ -157,10 +157,29 @@ mainPanel.Position = UDim2.new(1, -340, 0, 20)
 mainPanel.Size = panelSize
 mainPanel.Visible = false
 mainPanel.Active = true
+mainPanel.Draggable = true
 
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 4)
 mainCorner.Parent = mainPanel
+
+-- Scrolling Frame Container
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Name = "ScrollFrame"
+scrollFrame.Parent = mainPanel
+scrollFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.Position = UDim2.new(0, 0, 0, 50) -- Start below header
+scrollFrame.Size = UDim2.new(1, 0, 1, -50) -- Full size minus header
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.ScrollBarImageColor3 = colors.accent
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.BottomImage = "rbxasset://textures/Scroll/scroll-middle.png"
+scrollFrame.MidImage = "rbxasset://textures/Scroll/scroll-middle.png"
+scrollFrame.TopImage = "rbxasset://textures/Scroll/scroll-middle.png"
+scrollFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 -- Header Section
 local headerFrame = Instance.new("Frame")
@@ -196,6 +215,19 @@ titleLabel.TextColor3 = colors.text
 titleLabel.TextSize = 16
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Draggable hint text
+local dragHint = Instance.new("TextLabel")
+dragHint.Name = "DragHint"
+dragHint.Parent = headerFrame
+dragHint.BackgroundTransparency = 1
+dragHint.Position = UDim2.new(0, 0, 0, 30)
+dragHint.Size = UDim2.new(1, 0, 0, 20)
+dragHint.Font = Enum.Font.Code
+dragHint.TextColor3 = colors.text_dim
+dragHint.TextSize = 8
+dragHint.TextTransparency = 0.5
+dragHint.TextXAlignment = Enum.TextXAlignment.Center
+
 
 -- Status indicator
 local statusIndicator = Instance.new("Frame")
@@ -213,11 +245,11 @@ statusCorner.Parent = statusIndicator
 -- Speed Control Section
 local speedSection = Instance.new("Frame")
 speedSection.Name = "SpeedSection"
-speedSection.Parent = mainPanel
+speedSection.Parent = scrollFrame
 speedSection.BackgroundColor3 = colors.secondary
 speedSection.BorderSizePixel = 1
 speedSection.BorderColor3 = colors.tertiary
-speedSection.Position = UDim2.new(0, 15, 0, 60)
+speedSection.Position = UDim2.new(0, 15, 0, 10)
 speedSection.Size = UDim2.new(0, 290, 0, 100)
 
 local speedCorner = Instance.new("UICorner")
@@ -369,11 +401,11 @@ currentStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 -- Fly Control Section
 local flySection = Instance.new("Frame")
 flySection.Name = "FlySection"
-flySection.Parent = mainPanel
+flySection.Parent = scrollFrame
 flySection.BackgroundColor3 = colors.secondary
 flySection.BorderSizePixel = 1
 flySection.BorderColor3 = colors.tertiary
-flySection.Position = UDim2.new(0, 15, 0, 170)
+flySection.Position = UDim2.new(0, 15, 0, 120)
 flySection.Size = UDim2.new(0, 290, 0, 90)
 
 local flyCorner = Instance.new("UICorner")
@@ -388,7 +420,7 @@ flySectionLabel.BackgroundTransparency = 1
 flySectionLabel.Position = UDim2.new(0, 10, 0, 5)
 flySectionLabel.Size = UDim2.new(0, 270, 0, 20)
 flySectionLabel.Font = Enum.Font.Code
-flySectionLabel.Text = "[02] AERIAL_NAVIGATION"
+flySectionLabel.Text = "[02] FLY MODE"
 flySectionLabel.TextColor3 = colors.text_dim
 flySectionLabel.TextSize = 11
 flySectionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -409,7 +441,7 @@ flyToggleLabel.BackgroundTransparency = 1
 flyToggleLabel.Position = UDim2.new(0, 0, 0, 0)
 flyToggleLabel.Size = UDim2.new(0, 200, 0, 25)
 flyToggleLabel.Font = Enum.Font.Code
-flyToggleLabel.Text = "AERIAL_NAVIGATION"
+flyToggleLabel.Text = "FLY MODE"
 flyToggleLabel.TextColor3 = colors.text
 flyToggleLabel.TextSize = 12
 flyToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -485,11 +517,11 @@ flyControlsInfo.TextSize = 9
 -- Jump Control Section
 local jumpSection = Instance.new("Frame")
 jumpSection.Name = "JumpSection"
-jumpSection.Parent = mainPanel
+jumpSection.Parent = scrollFrame
 jumpSection.BackgroundColor3 = colors.secondary
 jumpSection.BorderSizePixel = 1
 jumpSection.BorderColor3 = colors.tertiary
-jumpSection.Position = UDim2.new(0, 15, 0, 270)
+jumpSection.Position = UDim2.new(0, 15, 0, 220)
 jumpSection.Size = UDim2.new(0, 290, 0, 120)
 
 local jumpCorner = Instance.new("UICorner")
@@ -640,11 +672,11 @@ jumpPowerDisplay.TextSize = 9
 -- Quick Controls Section
 local quickControls = Instance.new("Frame")
 quickControls.Name = "QuickControls"
-quickControls.Parent = mainPanel
+quickControls.Parent = scrollFrame
 quickControls.BackgroundColor3 = colors.secondary
 quickControls.BorderSizePixel = 1
 quickControls.BorderColor3 = colors.tertiary
-quickControls.Position = UDim2.new(0, 15, 0, 400)
+quickControls.Position = UDim2.new(0, 15, 0, 350)
 quickControls.Size = UDim2.new(0, 290, 0, 75)
 
 local quickCorner = Instance.new("UICorner")
@@ -667,560 +699,593 @@ quickHeader.TextXAlignment = Enum.TextXAlignment.Left
 -- Preset Buttons
 local presetSpeeds = {25, 50, 100, 150}
 for i, speed in ipairs(presetSpeeds) do
-    local presetButton = Instance.new("TextButton")
-    presetButton.Name = "Preset" .. speed
-    presetButton.Parent = quickControls
-    presetButton.BackgroundColor3 = colors.tertiary
-    presetButton.BorderSizePixel = 1
-    presetButton.BorderColor3 = colors.accent
-    presetButton.Position = UDim2.new(0, 10 + (i-1) * 70, 0, 30)
-    presetButton.Size = UDim2.new(0, 65, 0, 20)
-    presetButton.Font = Enum.Font.Code
-    presetButton.Text = "SPEED_" .. speed
-    presetButton.TextColor3 = colors.text
-    presetButton.TextSize = 9
+	local presetButton = Instance.new("TextButton")
+	presetButton.Name = "Preset" .. speed
+	presetButton.Parent = quickControls
+	presetButton.BackgroundColor3 = colors.tertiary
+	presetButton.BorderSizePixel = 1
+	presetButton.BorderColor3 = colors.accent
+	presetButton.Position = UDim2.new(0, 10 + (i-1) * 70, 0, 30)
+	presetButton.Size = UDim2.new(0, 65, 0, 20)
+	presetButton.Font = Enum.Font.Code
+	presetButton.Text = "SPEED_" .. speed
+	presetButton.TextColor3 = colors.text
+	presetButton.TextSize = 9
 
-    local presetCorner = Instance.new("UICorner")
-    presetCorner.CornerRadius = UDim.new(0, 2)
-    presetCorner.Parent = presetButton
+	local presetCorner = Instance.new("UICorner")
+	presetCorner.CornerRadius = UDim.new(0, 2)
+	presetCorner.Parent = presetButton
 
-    presetButton.MouseButton1Click:Connect(function()
-        updateCustomSpeed(speed)
-        if not isSpeedEnabled then
-            enableCustomSpeed()
-        end
-    end)
+	presetButton.MouseButton1Click:Connect(function()
+		updateCustomSpeed(speed)
+		if not isSpeedEnabled then
+			enableCustomSpeed()
+		end
+	end)
 
-    presetButton.MouseEnter:Connect(function()
-        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
-    end)
+	presetButton.MouseEnter:Connect(function()
+		TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	end)
 
-    presetButton.MouseLeave:Connect(function()
-        TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
-    end)
+	presetButton.MouseLeave:Connect(function()
+		TweenService:Create(presetButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
+	end)
 end
 
 -- Functions
 local function togglePanelVisibility()
-    isPanelVisible = not isPanelVisible
+	isPanelVisible = not isPanelVisible
 
-    if isPanelVisible then
-        -- Show panel
-        mainPanel.Visible = true
+	if isPanelVisible then
+		-- Show panel
+		mainPanel.Visible = true
 
-        -- Position panel relative to logo button
-        local logoPos = logoButton.Position
-        mainPanel.Position = UDim2.new(logoPos.X.Scale, logoPos.X.Offset - 280, logoPos.Y.Scale, logoPos.Y.Offset + 60)
+		-- Position panel relative to logo button (only if not already positioned)
+		local currentX = mainPanel.Position.X.Offset
+		local currentY = mainPanel.Position.Y.Offset
+		if currentX == -340 and currentY == 20 then
+			local logoPos = logoButton.Position
+			mainPanel.Position = UDim2.new(logoPos.X.Scale, logoPos.X.Offset - 280, logoPos.Y.Scale, logoPos.Y.Offset + 60)
+		end
 
-        -- Smooth fade in animation
-        mainPanel.BackgroundTransparency = 1
-        for i = 1, 10 do
-            mainPanel.BackgroundTransparency = 1 - (i * 0.1)
-            task.wait(0.02)
-        end
+		-- Smooth fade in animation
+		mainPanel.BackgroundTransparency = 1
+		for i = 1, 10 do
+			mainPanel.BackgroundTransparency = 1 - (i * 0.1)
+			task.wait(0.02)
+		end
 
-        -- Rotate logo container to indicate active state
-        TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 90}):Play()
+		-- Rotate logo container to indicate active state
+		TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 90}):Play()
 
-        -- Update logo status indicator
-        logoStatusIndicator.BackgroundColor3 = colors.text
-        TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 8, 0, 8)}):Play()
+		-- Update logo status indicator
+		logoStatusIndicator.BackgroundColor3 = colors.text
+		TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 8, 0, 8)}):Play()
 
-        showNotification("PANEL_STATE: VISIBLE")
-    else
-        -- Hide panel
-        mainPanel.BackgroundTransparency = 1
-        mainPanel.Visible = false
+		showNotification("PANEL_STATE: VISIBLE")
+	else
+		-- Hide panel
+		mainPanel.BackgroundTransparency = 1
+		mainPanel.Visible = false
 
-        -- Rotate logo container back to normal
-        TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 0}):Play()
+		-- Rotate logo container back to normal
+		TweenService:Create(logoContainer, TweenInfo.new(0.3), {Rotation = 0}):Play()
 
-        -- Update logo status indicator
-        logoStatusIndicator.BackgroundColor3 = colors.text_dim
-        TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 6, 0, 6)}):Play()
+		-- Update logo status indicator
+		logoStatusIndicator.BackgroundColor3 = colors.text_dim
+		TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 6, 0, 6)}):Play()
 
-        showNotification("PANEL_STATE: HIDDEN")
-    end
+		showNotification("PANEL_STATE: HIDDEN")
+	end
 end
 
 local function updateToggleSwitch(enabled)
-    if enabled then
-        TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
-        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
-        toggleSwitch.BackgroundColor3 = colors.text
-    else
-        TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
-        toggleSwitch.BackgroundColor3 = colors.text_dim
-    end
+	if enabled then
+		TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+		TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+		toggleSwitch.BackgroundColor3 = colors.text
+	else
+		TweenService:Create(toggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+		TweenService:Create(toggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+		toggleSwitch.BackgroundColor3 = colors.text_dim
+	end
 end
 
 local function updateFlyToggleSwitch(enabled)
-    if enabled then
-        TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
-        flyToggleSwitch.BackgroundColor3 = colors.text
-    else
-        TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
-        flyToggleSwitch.BackgroundColor3 = colors.text_dim
-    end
+	if enabled then
+		TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+		flyToggleSwitch.BackgroundColor3 = colors.text
+	else
+		TweenService:Create(flyToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+		flyToggleSwitch.BackgroundColor3 = colors.text_dim
+	end
 end
 
 local function updateInfinityToggleSwitch(enabled)
-    if enabled then
-        TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
-        infinityToggleSwitch.BackgroundColor3 = colors.text
-    else
-        TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
-        infinityToggleSwitch.BackgroundColor3 = colors.text_dim
-    end
+	if enabled then
+		TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+		infinityToggleSwitch.BackgroundColor3 = colors.text
+	else
+		TweenService:Create(infinityToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+		infinityToggleSwitch.BackgroundColor3 = colors.text_dim
+	end
 end
 
 local function updateHighJumpToggleSwitch(enabled)
-    if enabled then
-        TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
-        highJumpToggleSwitch.BackgroundColor3 = colors.text
-    else
-        TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
-        highJumpToggleSwitch.BackgroundColor3 = colors.text_dim
-    end
+	if enabled then
+		TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 27, 0, 2)}):Play()
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.active}):Play()
+		highJumpToggleSwitch.BackgroundColor3 = colors.text
+	else
+		TweenService:Create(highJumpToggleSwitch, TweenInfo.new(0.3), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.3), {BackgroundColor3 = colors.inactive}):Play()
+		highJumpToggleSwitch.BackgroundColor3 = colors.text_dim
+	end
 end
 
 local function updateStatus(active)
-    if active then
-        statusIndicator.BackgroundColor3 = colors.text
-        TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 12, 0, 12)}):Play()
-    else
-        statusIndicator.BackgroundColor3 = colors.text_dim
-        TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 8, 0, 8)}):Play()
-    end
+	if active then
+		statusIndicator.BackgroundColor3 = colors.text
+		TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 12, 0, 12)}):Play()
+	else
+		statusIndicator.BackgroundColor3 = colors.text_dim
+		TweenService:Create(statusIndicator, TweenInfo.new(0.5), {Size = UDim2.new(0, 8, 0, 8)}):Play()
+	end
 end
 
 local function enableCustomSpeed()
-    if isSpeedEnabled then return end
+	if isSpeedEnabled then return end
 
-    isSpeedEnabled = true
-    humanoid.WalkSpeed = customWalkSpeed
-    updateToggleSwitch(true)
-    speedValueLabel.Text = "VAL:" .. customWalkSpeed
-    currentStatusLabel.Text = "CUR:ON"
-    currentStatusLabel.TextColor3 = colors.text
-    updateStatus(true)
+	isSpeedEnabled = true
+	humanoid.WalkSpeed = customWalkSpeed
+	updateToggleSwitch(true)
+	speedValueLabel.Text = "VAL:" .. customWalkSpeed
+	currentStatusLabel.Text = "CUR:ON"
+	currentStatusLabel.TextColor3 = colors.text
+	updateStatus(true)
 
-    showNotification("SPEED_MODULATION: ENABLED")
+	showNotification("SPEED_MODULATION: ENABLED")
 end
 
 local function disableCustomSpeed()
-    if not isSpeedEnabled then return end
+	if not isSpeedEnabled then return end
 
-    isSpeedEnabled = false
-    humanoid.WalkSpeed = originalWalkSpeed
-    updateToggleSwitch(false)
-    speedValueLabel.Text = "VAL:" .. originalWalkSpeed
-    currentStatusLabel.Text = "CUR:OFF"
-    currentStatusLabel.TextColor3 = colors.text_dim
-    updateStatus(false)
+	isSpeedEnabled = false
+	humanoid.WalkSpeed = originalWalkSpeed
+	updateToggleSwitch(false)
+	speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+	currentStatusLabel.Text = "CUR:OFF"
+	currentStatusLabel.TextColor3 = colors.text_dim
+	updateStatus(false)
 
-    showNotification("SPEED_MODULATION: DISABLED")
+	showNotification("SPEED_MODULATION: DISABLED")
 end
 
 local function updateCustomSpeed(newSpeed)
-    local speed = tonumber(newSpeed)
-    if speed and speed >= 1 and speed <= 200 then
-        customWalkSpeed = speed
-        speedInput.Text = tostring(speed)
+	local speed = tonumber(newSpeed)
+	if speed and speed >= 1 and speed <= 200 then
+		customWalkSpeed = speed
+		speedInput.Text = tostring(speed)
 
-        if isSpeedEnabled then
-            humanoid.WalkSpeed = customWalkSpeed
-            speedValueLabel.Text = "VAL:" .. customWalkSpeed
-        end
-    else
-        speedInput.Text = tostring(customWalkSpeed)
-    end
+		if isSpeedEnabled then
+			humanoid.WalkSpeed = customWalkSpeed
+			speedValueLabel.Text = "VAL:" .. customWalkSpeed
+		end
+	else
+		speedInput.Text = tostring(customWalkSpeed)
+	end
 end
 
 local function showNotification(message)
-    StarterGui:SetCore("ChatMakeSystemMessage", {
-        Text = "[SYSTEM] " .. message;
-        Color = colors.text;
-        Font = Enum.Font.Code;
-    })
+	StarterGui:SetCore("ChatMakeSystemMessage", {
+		Text = "[SYSTEM] " .. message;
+		Color = colors.text;
+		Font = Enum.Font.Code;
+	})
 end
 
 -- Fly Functions
 local function enableFly()
-    if isFlying then return end
+	if isFlying then return end
 
-    isFlying = true
-    updateFlyToggleSwitch(true)
+	isFlying = true
+	updateFlyToggleSwitch(true)
 
-    -- Create fly components
-    bv = Instance.new("BodyVelocity")
-    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    bv.P = 5000
-    bv.Parent = humanoid.RootPart
+	-- Create fly components
+	bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+	bv.P = 5000
+	bv.Parent = humanoid.RootPart
 
-    bg = Instance.new("BodyGyro")
-    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bg.P = 5000
-    bg.Parent = humanoid.RootPart
+	bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+	bg.P = 5000
+	bg.Parent = humanoid.RootPart
 
-    humanoid.PlatformStand = true
+	humanoid.PlatformStand = true
 
-    showNotification("AERIAL_NAVIGATION: ENABLED")
+	showNotification("FLY MODE: ENABLED")
 end
 
 local function disableFly()
-    if not isFlying then return end
+	if not isFlying then return end
 
-    isFlying = false
-    updateFlyToggleSwitch(false)
+	isFlying = false
+	updateFlyToggleSwitch(false)
 
-    if bv then
-        bv:Destroy()
-        bv = nil
-    end
+	if bv then
+		bv:Destroy()
+		bv = nil
+	end
 
-    if bg then
-        bg:Destroy()
-        bg = nil
-    end
+	if bg then
+		bg:Destroy()
+		bg = nil
+	end
 
-    humanoid.PlatformStand = false
+	humanoid.PlatformStand = false
 
-    showNotification("AERIAL_NAVIGATION: DISABLED")
+	showNotification("FLY MODE: DISABLED")
 end
 
 local function updateFlySpeed(newSpeed)
-    local speed = tonumber(newSpeed)
-    if speed and speed >= 10 and speed <= 500 then
-        flySpeed = speed
-        flySpeedInput.Text = tostring(speed)
-    else
-        flySpeedInput.Text = tostring(flySpeed)
-    end
+	local speed = tonumber(newSpeed)
+	if speed and speed >= 10 and speed <= 500 then
+		flySpeed = speed
+		flySpeedInput.Text = tostring(speed)
+	else
+		flySpeedInput.Text = tostring(flySpeed)
+	end
 end
 
 -- Jump Functions
 local function enableInfinityJump()
-    if isInfinityJumpEnabled then return end
+	if isInfinityJumpEnabled then return end
 
-    isInfinityJumpEnabled = true
-    updateInfinityToggleSwitch(true)
+	isInfinityJumpEnabled = true
+	updateInfinityToggleSwitch(true)
 
-    showNotification("INFINITE_JUMP: ENABLED")
+	showNotification("INFINITE_JUMP: ENABLED")
 end
 
 local function disableInfinityJump()
-    if not isInfinityJumpEnabled then return end
+	if not isInfinityJumpEnabled then return end
 
-    isInfinityJumpEnabled = false
-    updateInfinityToggleSwitch(false)
+	isInfinityJumpEnabled = false
+	updateInfinityToggleSwitch(false)
 
-    showNotification("INFINITE_JUMP: DISABLED")
+	showNotification("INFINITE_JUMP: DISABLED")
 end
 
 local function enableHighJump()
-    if isHighJumpEnabled then return end
+	if isHighJumpEnabled then return end
 
-    isHighJumpEnabled = true
-    humanoid.JumpPower = highJumpPower
-    updateHighJumpToggleSwitch(true)
-    jumpPowerDisplay.Text = "POWER: " .. highJumpPower .. " | STATUS: ACTIVE"
+	isHighJumpEnabled = true
+	humanoid.JumpPower = highJumpPower
+	updateHighJumpToggleSwitch(true)
+	jumpPowerDisplay.Text = "POWER: " .. highJumpPower .. " | STATUS: ACTIVE"
 
-    showNotification("AMPLIFIED_JUMP: ENABLED")
+	showNotification("AMPLIFIED_JUMP: ENABLED")
 end
 
 local function disableHighJump()
-    if not isHighJumpEnabled then return end
+	if not isHighJumpEnabled then return end
 
-    isHighJumpEnabled = false
-    humanoid.JumpPower = originalJumpPower
-    updateHighJumpToggleSwitch(false)
-    jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
+	isHighJumpEnabled = false
+	humanoid.JumpPower = originalJumpPower
+	updateHighJumpToggleSwitch(false)
+	jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
 
-    showNotification("AMPLIFIED_JUMP: DISABLED")
+	showNotification("AMPLIFIED_JUMP: DISABLED")
 end
 
 -- Button Events
 -- Logo button for show/hide panel
 logoButton.MouseButton1Click:Connect(function()
-    togglePanelVisibility()
+	togglePanelVisibility()
 end)
 
 -- Logo button hover effects
 logoButton.MouseEnter:Connect(function()
-    TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.active}):Play()
-    TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.accent}):Play()
+	TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.active}):Play()
+	TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.accent}):Play()
 end)
 
 logoButton.MouseLeave:Connect(function()
-    TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.text}):Play()
-    TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.primary}):Play()
+	TweenService:Create(logoText, TweenInfo.new(0.2), {TextColor3 = colors.text}):Play()
+	TweenService:Create(logoButton, TweenInfo.new(0.2), {BackgroundColor3 = colors.primary}):Play()
+end)
+
+-- Main panel drag start feedback
+mainPanel.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		-- Change header color to indicate dragging
+		TweenService:Create(headerFrame, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
+		-- Show drag hint
+		TweenService:Create(dragHint, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+	end
+end)
+
+-- Main panel drag end feedback
+mainPanel.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		-- Restore header color
+		TweenService:Create(headerFrame, TweenInfo.new(0.1), {BackgroundColor3 = colors.secondary}):Play()
+		-- Hide drag hint
+		TweenService:Create(dragHint, TweenInfo.new(0.2), {TextTransparency = 0.5}):Play()
+	end
 end)
 
 toggleButton.MouseButton1Click:Connect(function()
-    if isSpeedEnabled then
-        disableCustomSpeed()
-    else
-        enableCustomSpeed()
-    end
+	if isSpeedEnabled then
+		disableCustomSpeed()
+	else
+		enableCustomSpeed()
+	end
 end)
 
 setButton.MouseButton1Click:Connect(function()
-    updateCustomSpeed(speedInput.Text)
+	updateCustomSpeed(speedInput.Text)
 end)
 
 speedInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        updateCustomSpeed(speedInput.Text)
-    end
+	if enterPressed then
+		updateCustomSpeed(speedInput.Text)
+	end
 end)
 
 -- Fly toggle button event
 flyToggleInvisibleButton.MouseButton1Click:Connect(function()
-    if isFlying then
-        disableFly()
-    else
-        enableFly()
-    end
+	if isFlying then
+		disableFly()
+	else
+		enableFly()
+	end
 end)
 
 flySpeedInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        updateFlySpeed(flySpeedInput.Text)
-    end
+	if enterPressed then
+		updateFlySpeed(flySpeedInput.Text)
+	end
 end)
 
 -- Infinity jump toggle button event
 infinityToggleInvisibleButton.MouseButton1Click:Connect(function()
-    if isInfinityJumpEnabled then
-        disableInfinityJump()
-    else
-        enableInfinityJump()
-    end
+	if isInfinityJumpEnabled then
+		disableInfinityJump()
+	else
+		enableInfinityJump()
+	end
 end)
 
 -- High jump toggle button event
 highJumpToggleInvisibleButton.MouseButton1Click:Connect(function()
-    if isHighJumpEnabled then
-        disableHighJump()
-    else
-        enableHighJump()
-    end
+	if isHighJumpEnabled then
+		disableHighJump()
+	else
+		enableHighJump()
+	end
 end)
 
 -- Hover Effects
 toggleButton.MouseEnter:Connect(function()
-    TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
 end)
 
 toggleButton.MouseLeave:Connect(function()
-    if isSpeedEnabled then
-        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
-    else
-        TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
-    end
+	if isSpeedEnabled then
+		TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	else
+		TweenService:Create(toggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+	end
 end)
 
 setButton.MouseEnter:Connect(function()
-    TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
 end)
 
 setButton.MouseLeave:Connect(function()
-    TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
+	TweenService:Create(setButton, TweenInfo.new(0.1), {BackgroundColor3 = colors.tertiary}):Play()
 end)
 
 -- Fly toggle hover effects
 flyToggleInvisibleButton.MouseEnter:Connect(function()
-    if isFlying then
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    else
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    end
+	if isFlying then
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	else
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	end
 end)
 
 flyToggleInvisibleButton.MouseLeave:Connect(function()
-    if isFlying then
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
-    else
-        TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
-    end
+	if isFlying then
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	else
+		TweenService:Create(flyToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+	end
 end)
 
 -- Infinity jump toggle hover effects
 infinityToggleInvisibleButton.MouseEnter:Connect(function()
-    if isInfinityJumpEnabled then
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    else
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    end
+	if isInfinityJumpEnabled then
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	else
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	end
 end)
 
 infinityToggleInvisibleButton.MouseLeave:Connect(function()
-    if isInfinityJumpEnabled then
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
-    else
-        TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
-    end
+	if isInfinityJumpEnabled then
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	else
+		TweenService:Create(infinityToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+	end
 end)
 
 -- High jump toggle hover effects
 highJumpToggleInvisibleButton.MouseEnter:Connect(function()
-    if isHighJumpEnabled then
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    else
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
-    end
+	if isHighJumpEnabled then
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	else
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+	end
 end)
 
 highJumpToggleInvisibleButton.MouseLeave:Connect(function()
-    if isHighJumpEnabled then
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
-    else
-        TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
-    end
+	if isHighJumpEnabled then
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.active}):Play()
+	else
+		TweenService:Create(highJumpToggleSwitchBg, TweenInfo.new(0.1), {BackgroundColor3 = colors.inactive}):Play()
+	end
 end)
 
 -- Fly Control (FIXED: W now goes forward, S goes backward)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed or not isFlying then return end
+	if gameProcessed or not isFlying then return end
 
-    if input.KeyCode == Enum.KeyCode.W then
-        flyDirection = Vector3.new(0, 0, 1)   -- Forward (positive Z)
-    elseif input.KeyCode == Enum.KeyCode.S then
-        flyDirection = Vector3.new(0, 0, -1)  -- Backward (negative Z)
-    elseif input.KeyCode == Enum.KeyCode.A then
-        flyDirection = Vector3.new(-1, 0, 0)  -- Left
-    elseif input.KeyCode == Enum.KeyCode.D then
-        flyDirection = Vector3.new(1, 0, 0)   -- Right
-    elseif input.KeyCode == Enum.KeyCode.Space then
-        flyDirection = Vector3.new(0, 1, 0)   -- Up
-    elseif input.KeyCode == Enum.KeyCode.LeftShift then
-        flyDirection = Vector3.new(0, -1, 0)  -- Down
-    end
+	if input.KeyCode == Enum.KeyCode.W then
+		flyDirection = Vector3.new(0, 0, 1)   -- Forward (positive Z)
+	elseif input.KeyCode == Enum.KeyCode.S then
+		flyDirection = Vector3.new(0, 0, -1)  -- Backward (negative Z)
+	elseif input.KeyCode == Enum.KeyCode.A then
+		flyDirection = Vector3.new(-1, 0, 0)  -- Left
+	elseif input.KeyCode == Enum.KeyCode.D then
+		flyDirection = Vector3.new(1, 0, 0)   -- Right
+	elseif input.KeyCode == Enum.KeyCode.Space then
+		flyDirection = Vector3.new(0, 1, 0)   -- Up
+	elseif input.KeyCode == Enum.KeyCode.LeftShift then
+		flyDirection = Vector3.new(0, -1, 0)  -- Down
+	end
 end)
 
 UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if gameProcessed or not isFlying then return end
+	if gameProcessed or not isFlying then return end
 
-    if input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.S or
-       input.KeyCode == Enum.KeyCode.A or input.KeyCode == Enum.KeyCode.D or
-       input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.LeftShift then
-        flyDirection = Vector3.new(0, 0, 0)
-    end
+	if input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.S or
+		input.KeyCode == Enum.KeyCode.A or input.KeyCode == Enum.KeyCode.D or
+		input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.LeftShift then
+		flyDirection = Vector3.new(0, 0, 0)
+	end
 end)
 
 -- Fly Movement Loop
 RunService.Heartbeat:Connect(function()
-    if isFlying and bv and humanoid.RootPart then
-        local camera = Workspace.CurrentCamera
-        local moveDirection = flyDirection
+	if isFlying and bv and humanoid.RootPart then
+		local camera = Workspace.CurrentCamera
+		local moveDirection = flyDirection
 
-        if moveDirection ~= Vector3.new(0, 0, 0) then
-            local cameraDirection = camera.CFrame.LookVector
-            local adjustedDirection = (cameraDirection * moveDirection.Z + camera.CFrame.RightVector * moveDirection.X + Vector3.new(0, moveDirection.Y, 0)).Unit
-            bv.Velocity = adjustedDirection * flySpeed
-        else
-            bv.Velocity = Vector3.new(0, 0, 0)
-        end
+		if moveDirection ~= Vector3.new(0, 0, 0) then
+			local cameraDirection = camera.CFrame.LookVector
+			local adjustedDirection = (cameraDirection * moveDirection.Z + camera.CFrame.RightVector * moveDirection.X + Vector3.new(0, moveDirection.Y, 0)).Unit
+			bv.Velocity = adjustedDirection * flySpeed
+		else
+			bv.Velocity = Vector3.new(0, 0, 0)
+		end
 
-        bg.CFrame = camera.CFrame
-    end
+		bg.CFrame = camera.CFrame
+	end
 end)
 
 -- Infinity Jump
 UserInputService.JumpRequest:Connect(function()
-    if isInfinityJumpEnabled then
-        humanoid.Jump = true
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
+	if isInfinityJumpEnabled then
+		humanoid.Jump = true
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
 end)
 
 -- Keyboard Shortcuts
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+	if gameProcessed then return end
 
-    -- Speed toggle
-    if input.KeyCode == Enum.KeyCode.X then
-        if isSpeedEnabled then
-            disableCustomSpeed()
-        else
-            enableCustomSpeed()
-        end
-    end
+	-- Speed toggle
+	if input.KeyCode == Enum.KeyCode.X then
+		if isSpeedEnabled then
+			disableCustomSpeed()
+		else
+			enableCustomSpeed()
+		end
+	end
 
-    -- Fly toggle
-    if input.KeyCode == Enum.KeyCode.F then
-        if isFlying then
-            disableFly()
-        else
-            enableFly()
-        end
-    end
+	-- Fly toggle
+	if input.KeyCode == Enum.KeyCode.F then
+		if isFlying then
+			disableFly()
+		else
+			enableFly()
+		end
+	end
 
-    -- Jump toggles
-    if input.KeyCode == Enum.KeyCode.J then
-        if isInfinityJumpEnabled then
-            disableInfinityJump()
-        else
-            enableInfinityJump()
-        end
-    end
+	-- Jump toggles
+	if input.KeyCode == Enum.KeyCode.J then
+		if isInfinityJumpEnabled then
+			disableInfinityJump()
+		else
+			enableInfinityJump()
+		end
+	end
 
-    if input.KeyCode == Enum.KeyCode.H then
-        if isHighJumpEnabled then
-            disableHighJump()
-        else
-            enableHighJump()
-        end
-    end
+	if input.KeyCode == Enum.KeyCode.H then
+		if isHighJumpEnabled then
+			disableHighJump()
+		else
+			enableHighJump()
+		end
+	end
 
-    -- Reset all
-    if input.KeyCode == Enum.KeyCode.R and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-        disableCustomSpeed()
-        disableFly()
-        disableInfinityJump()
-        disableHighJump()
-        customWalkSpeed = 50
-        flySpeed = 100
-        speedInput.Text = tostring(customWalkSpeed)
-        flySpeedInput.Text = tostring(flySpeed)
-        speedValueLabel.Text = "VAL:" .. originalWalkSpeed
-        showNotification("SYSTEM_RESET: COMPLETE")
-    end
+	-- Reset panel position
+	if input.KeyCode == Enum.KeyCode.P and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+		local logoPos = logoButton.Position
+		mainPanel.Position = UDim2.new(logoPos.X.Scale, logoPos.X.Offset - 280, logoPos.Y.Scale, logoPos.Y.Offset + 60)
+		showNotification("PANEL_POSITION: RESET")
+	end
+
+	-- Reset all
+	if input.KeyCode == Enum.KeyCode.R and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+		disableCustomSpeed()
+		disableFly()
+		disableInfinityJump()
+		disableHighJump()
+		customWalkSpeed = 50
+		flySpeed = 100
+		speedInput.Text = tostring(customWalkSpeed)
+		flySpeedInput.Text = tostring(flySpeed)
+		speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+		showNotification("SYSTEM_RESET: COMPLETE")
+	end
 end)
 
 -- Character respawn handling
 player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoid = character:WaitForChild("Humanoid")
-    originalWalkSpeed = humanoid.WalkSpeed
-    originalJumpPower = humanoid.JumpPower
-    speedValueLabel.Text = "VAL:" .. originalWalkSpeed
-    jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
+	character = newCharacter
+	humanoid = character:WaitForChild("Humanoid")
+	originalWalkSpeed = humanoid.WalkSpeed
+	originalJumpPower = humanoid.JumpPower
+	speedValueLabel.Text = "VAL:" .. originalWalkSpeed
+	jumpPowerDisplay.Text = "POWER: " .. originalJumpPower .. " | STATUS: INACTIVE"
 
-    -- Reset all features on respawn
-    disableCustomSpeed()
-    disableFly()
-    disableInfinityJump()
-    disableHighJump()
+	-- Reset all features on respawn
+	disableCustomSpeed()
+	disableFly()
+	disableInfinityJump()
+	disableHighJump()
 end)
 
 -- Auto-disable on death
 humanoid.Died:Connect(function()
-    if isSpeedEnabled then disableCustomSpeed() end
-    if isFlying then disableFly() end
-    if isInfinityJumpEnabled then disableInfinityJump() end
-    if isHighJumpEnabled then disableHighJump() end
+	if isSpeedEnabled then disableCustomSpeed() end
+	if isFlying then disableFly() end
+	if isInfinityJumpEnabled then disableInfinityJump() end
+	if isHighJumpEnabled then disableHighJump() end
 end)
 
 print("[SYSTEM] .SYSTEM: INITIALIZED")
 print("[KEYBINDS] X:SPEED F:FLY J:INFINITE_JUMP H:HIGH_JUMP")
+print("[PANEL] CLICK_LOGO:TOGGLE_PANEL DRAG_HEADER:MOVE_PANEL CTRL+P:RESET_POSITION")
 print("[RESET] CTRL+R: SYSTEM_RESET")
-print("[FLIGHT_CONTROLS] W:FORWARD S:BACKWARD A:LEFT D:RIGHT SPACE:UP SHIFT:DOWN")
+print("[SCROLLING] USE_MOUSE_WHEEL_OR_SCROLLBAR")
+print("[FLIGHT_CONTROLS] W:FORWARD S:BACKWARD A:LEFT D:RIGHT SPACE:UP SHIFT:DOWN") 
