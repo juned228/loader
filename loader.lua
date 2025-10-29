@@ -1117,14 +1117,56 @@ local carryRefreshCorner = Instance.new("UICorner")
 carryRefreshCorner.CornerRadius = UDim.new(0, 2)
 carryRefreshCorner.Parent = carryRefreshButton
 
+-- Search Box for Carry Player
+local carrySearchBox = Instance.new("TextBox")
+carrySearchBox.Name = "CarrySearchBox"
+carrySearchBox.Parent = carrySection
+carrySearchBox.BackgroundColor3 = colors.secondary
+carrySearchBox.BackgroundTransparency = 0.3
+carrySearchBox.BorderSizePixel = 0
+carrySearchBox.Position = UDim2.new(0, 10, 0, 30)
+carrySearchBox.Size = UDim2.new(0, 270, 0, 20)
+carrySearchBox.Font = Enum.Font.Code
+carrySearchBox.Text = "Search player to carry..."
+carrySearchBox.TextColor3 = colors.text_dim
+carrySearchBox.TextSize = 11
+carrySearchBox.PlaceholderText = "Search player to carry..."
+carrySearchBox.PlaceholderColor3 = colors.text_dim
+carrySearchBox.TextXAlignment = Enum.TextXAlignment.Left
+carrySearchBox.TextWrapped = true
+carrySearchBox.ClearTextOnFocus = true
+
+local carrySearchBoxCorner = Instance.new("UICorner")
+carrySearchBoxCorner.CornerRadius = UDim.new(0, 2)
+carrySearchBoxCorner.Parent = carrySearchBox
+
+-- Clear Carry Search Button
+local clearCarrySearchButton = Instance.new("TextButton")
+clearCarrySearchButton.Name = "ClearCarrySearchButton"
+clearCarrySearchButton.Parent = carrySearchBox
+clearCarrySearchButton.BackgroundColor3 = Color3.new(0, 0, 0)
+clearCarrySearchButton.BackgroundTransparency = 0.5
+clearCarrySearchButton.BorderSizePixel = 0
+clearCarrySearchButton.Position = UDim2.new(1, -18, 0, 1)
+clearCarrySearchButton.Size = UDim2.new(0, 16, 0, 18)
+clearCarrySearchButton.Font = Enum.Font.Code
+clearCarrySearchButton.Text = "✕"
+clearCarrySearchButton.TextColor3 = colors.text_dim
+clearCarrySearchButton.TextSize = 10
+clearCarrySearchButton.Visible = false -- Hidden by default
+
+local clearCarrySearchCorner = Instance.new("UICorner")
+clearCarrySearchCorner.CornerRadius = UDim.new(0, 2)
+clearCarrySearchCorner.Parent = clearCarrySearchButton
+
 -- Carry Player List Container
 local carryListContainer = Instance.new("Frame")
 carryListContainer.Name = "CarryListContainer"
 carryListContainer.Parent = carrySection
 carryListContainer.BackgroundColor3 = colors.tertiary
 carryListContainer.BorderSizePixel = 0
-carryListContainer.Position = UDim2.new(0, 10, 0, 30)
-carryListContainer.Size = UDim2.new(0, 270, 0, 100)
+carryListContainer.Position = UDim2.new(0, 10, 0, 55)
+carryListContainer.Size = UDim2.new(0, 270, 0, 75)
 
 local carryListCorner = Instance.new("UICorner")
 carryListCorner.CornerRadius = UDim.new(0, 2)
@@ -2726,13 +2768,31 @@ local function refreshCarryPlayerList()
     end
     carryPlayerButtons = {}
 
-    -- Get all players except local player
+    -- Get all players except local player with search filter
     local allPlayers = Players:GetPlayers()
     local otherPlayers = {}
+    local searchText = string.lower(carrySearchBox.Text or "")
+    print("[CARRY_SEARCH] Total players found: " .. #allPlayers)
+    print("[CARRY_SEARCH] Search text: " .. searchText)
 
     for _, targetPlayer in ipairs(allPlayers) do
         if targetPlayer ~= player then
-            table.insert(otherPlayers, targetPlayer)
+            -- Apply search filter
+            local playerName = string.lower(targetPlayer.Name)
+            local shouldInclude = false
+
+            if searchText == "" or searchText == "search player to carry..." then
+                shouldInclude = true
+            elseif string.find(playerName, searchText, 1, true) then
+                shouldInclude = true
+            end
+
+            if shouldInclude then
+                table.insert(otherPlayers, targetPlayer)
+                print("[CARRY_SEARCH] Added player to list: " .. targetPlayer.Name)
+            else
+                print("[CARRY_SEARCH] Filtered out player: " .. targetPlayer.Name)
+            end
         end
     end
 
@@ -3723,6 +3783,67 @@ refreshPlayerList()
 
 -- Initialize carry player list
 refreshCarryPlayerList()
+
+-- Carry Search Box Event Handler
+carrySearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    if carrySearchBox.Text == "Search player to carry..." then return end
+
+    -- Visual feedback for active search
+    if carrySearchBox.Text ~= "" then
+        carrySearchBox.BackgroundColor3 = colors.accent
+        carrySearchBox.BackgroundTransparency = 0.1
+    else
+        carrySearchBox.BackgroundColor3 = colors.secondary
+        carrySearchBox.BackgroundTransparency = 0.3
+    end
+
+    -- Show/hide clear button
+    clearCarrySearchButton.Visible = carrySearchBox.Text ~= ""
+
+    -- Debounce rapid typing
+    if carrySearchBox._lastUpdateTime and (tick() - carrySearchBox._lastUpdateTime) < 0.1 then
+        return
+    end
+    carrySearchBox._lastUpdateTime = tick()
+
+    -- Refresh carry player list with search filter
+    refreshCarryPlayerList()
+end)
+
+-- Clear Carry Search Button Event Handler
+clearCarrySearchButton.MouseButton1Click:Connect(function()
+    carrySearchBox.Text = "Search player to carry..."
+    carrySearchBox.TextColor3 = colors.text_dim
+    carrySearchBox.BackgroundColor3 = colors.secondary
+    carrySearchBox.BackgroundTransparency = 0.3
+    clearCarrySearchButton.Visible = false
+    refreshCarryPlayerList()
+end)
+
+-- Clear Carry Search Button Hover Effects
+clearCarrySearchButton.MouseEnter:Connect(function()
+    clearCarrySearchButton.TextColor3 = colors.accent
+end)
+
+clearCarrySearchButton.MouseLeave:Connect(function()
+    clearCarrySearchButton.TextColor3 = colors.text_dim
+end)
+
+-- Carry Search Box Focus Events
+carrySearchBox.Focused:Connect(function()
+    if carrySearchBox.Text == "Search player to carry..." then
+        carrySearchBox.Text = ""
+        carrySearchBox.TextColor3 = colors.text
+    end
+end)
+
+carrySearchBox.FocusLost:Connect(function(enterPressed)
+    if carrySearchBox.Text == "" then
+        carrySearchBox.Text = "Search player to carry..."
+        carrySearchBox.TextColor3 = colors.text_dim
+        clearCarrySearchButton.Visible = false
+    end
+end)
 
 print("[SYSTEM] .SYSTEM: INITIALIZED")
 print("[KEYBINDS] X:SPEED F:FLY J:INFINITE_JUMP H:HIGH_JUMP L:LINE_PLAYER")
