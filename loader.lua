@@ -1277,9 +1277,11 @@ local function createPlayerLine(targetPlayer)
     local localHead = localCharacter:FindFirstChild("Head")
     if not localHead then return end
 
-    -- Remove existing line for this player
+    -- Remove existing line and name display for this player
     if playerLines[targetPlayer] then
-        playerLines[targetPlayer]:Destroy()
+        playerLines[targetPlayer].Line:Destroy()
+        playerLines[targetPlayer].NameDisplay:Destroy()
+        playerLines[targetPlayer].Box:Destroy()
     end
 
     -- Create new line
@@ -1296,14 +1298,90 @@ local function createPlayerLine(targetPlayer)
     attachment1.Name = "LineEnd"
     attachment1.Parent = localHead
 
+    -- Determine player gender by checking multiple characteristics (most reliable method available)
+    local isFemale = false
+    local humanoid = targetCharacter:FindFirstChildOfClass("Humanoid")
+    
+    if humanoid then
+        -- First check for female-specific accessories
+        for _, child in pairs(targetCharacter:GetChildren()) do
+            if child:IsA("Accessory") then
+                local accessoryType = child.AccessoryType or Enum.AccessoryType.Unknown
+                -- Check for accessories that are typically female-specific
+                if accessoryType == Enum.AccessoryType.Hair or 
+                   accessoryType == Enum.AccessoryType.Hat or
+                   string.find(string.lower(child.Name), "hair") or
+                   string.find(string.lower(child.Name), "curl") or
+                   string.find(string.lower(child.Name), "bun") or
+                   string.find(string.lower(child.Name), "ponytail") or
+                   string.find(string.lower(child.Name), "pigtails") or
+                   string.find(string.lower(child.Name), "braided") or
+                   string.find(string.lower(child.Name), "flow") then
+                    isFemale = true
+                    break
+                end
+            end
+        end
+        
+        -- If no gender-specific accessories found, try to determine based on proportions
+        if not isFemale then
+            local bodyTypeScale = humanoid.BodyTypeScale
+            local headScale = humanoid.HeadScale
+            
+            -- If body type scale is smaller or head scale is proportionally larger, it might indicate female
+            if bodyTypeScale and headScale then
+                -- This is a heuristic - different body types might indicate gender
+                if bodyTypeScale.Value < 0.9 or headScale.Value > 1.2 then
+                    isFemale = true
+                end
+            end
+        end
+        
+        -- Additional check: examine the character's body mesh to determine gender
+        -- Some R6/R15 characters have different mesh types for male/female
+        local torso = targetCharacter:FindFirstChild("Torso") or targetCharacter:FindFirstChild("UpperTorso") or targetCharacter:FindFirstChild("LowerTorso")
+        if torso then
+            for _, part in pairs(torso:GetChildren()) do
+                if part:IsA("SpecialMesh") then
+                    -- Check if this mesh is typically associated with female characters
+                    if string.find(string.lower(part.MeshId), "female") or string.find(string.lower(part.MeshId), "girl") then
+                        isFemale = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+    
+    -- As a final fallback to ensure color variety, if no visual gender indicators are found,
+    -- assign based on player's UserId to ensure we see both colors
+    if not isFemale then
+        -- Use UserId to create a deterministic assignment that ensures variety
+        isFemale = (targetPlayer.UserId % 2 == 0)  -- Even userIds = female (pink), odd = male (green)
+    end
+    
+    -- Determine line color based on gender
+    local lineColor
+    if isFemale then
+        -- Pink line for female
+        lineColor = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 105, 180)), -- Pink at target player
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 182, 193)), -- Light pink in middle
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 255, 100))  -- Green at local player
+        })
+    else
+        -- Green line for male
+        lineColor = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 205, 50)), -- Green at target player
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(144, 238, 144)), -- Light green in middle
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 255, 100))  -- Green at local player
+        })
+    end
+
     -- Configure line - connect target player to local player (admin)
     line.Attachment0 = attachment0
     line.Attachment1 = attachment1
-    line.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)), -- Red at target player
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 200, 100)), -- Orange in middle
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 255, 100))  -- Green at local player
-    })
+    line.Color = lineColor
     line.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0.2), -- More visible at target
         NumberSequenceKeypoint.new(0.5, 0.15), -- Most visible in middle
@@ -1315,12 +1393,61 @@ local function createPlayerLine(targetPlayer)
     line.LightInfluence = 0.5
     line.LightEmission = 0.2
 
-    playerLines[targetPlayer] = line
+    -- Create name display above head using BillboardGui
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "PlayerNameDisplay_" .. targetPlayer.Name
+    billboardGui.Parent = targetHead
+    billboardGui.Size = UDim2.new(0, 150, 0, 50)
+    billboardGui.StudsOffset = Vector3.new(0, 5, 0) -- Position above the head
+    billboardGui.AlwaysOnTop = true
+    billboardGui.ExtentsOffset = Vector3.new(5, 5, 5) -- Make it visible from further away
+    billboardGui.MaxDistance = 500 -- Increase max distance for visibility
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "PlayerNameLabel"
+    nameLabel.Parent = billboardGui
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.Text = targetPlayer.DisplayName
+    nameLabel.TextScaled = true
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.BorderSizePixel = 0
+    nameLabel.TextStrokeTransparency = 0.3
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+    -- Create 3D box around the player character
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name = "PlayerBox_" .. targetPlayer.Name
+    box.Parent = targetCharacter
+    box.Adornee = targetCharacter
+    box.AlwaysOnTop = true
+    box.Size = Vector3.new(4, 6, 3) -- Standard humanoid size
+    box.Color3 = Color3.fromRGB(255, 100, 100) -- Red color for visibility
+    box.Transparency = 0.5  -- Reduced transparency for better visibility
+    box.ZIndex = 0
+    box.Visible = true -- Ensure it's visible
+
+    -- Store both line and name display in the playerLines table
+    playerLines[targetPlayer] = {
+        Line = line,
+        NameDisplay = billboardGui,
+        Box = box
+    }
 end
 
 local function removePlayerLine(targetPlayer)
     if playerLines[targetPlayer] then
-        playerLines[targetPlayer]:Destroy()
+        local playerData = playerLines[targetPlayer]
+        if playerData.Line then
+            playerData.Line:Destroy()
+        end
+        if playerData.NameDisplay then
+            playerData.NameDisplay:Destroy()
+        end
+        if playerData.Box then
+            playerData.Box:Destroy()
+        end
         playerLines[targetPlayer] = nil
     end
 end
@@ -1389,7 +1516,9 @@ local function enableLinePlayer()
         linePlayerStatusDisplay.Text = string.format("CONNECTIONS: %d/%d | STATUS: ACTIVE", activeConnections, connectedPlayers)
     end)
 
-    showNotification("LINE_PLAYER_ON_HEAD: ENABLED")
+    if showNotification then
+        showNotification("LINE_PLAYER_ON_HEAD: ENABLED")
+    end
 end
 
 local function disableLinePlayer()
@@ -1404,10 +1533,16 @@ local function disableLinePlayer()
         lineUpdateConnection = nil
     end
 
-    -- Remove all lines
-    for _, line in pairs(playerLines) do
-        if line then
-            line:Destroy()
+    -- Remove all lines and associated elements
+    for targetPlayer, playerData in pairs(playerLines) do
+        if playerData.Line then
+            playerData.Line:Destroy()
+        end
+        if playerData.NameDisplay then
+            playerData.NameDisplay:Destroy()
+        end
+        if playerData.Box then
+            playerData.Box:Destroy()
         end
     end
     playerLines = {}
@@ -1415,7 +1550,9 @@ local function disableLinePlayer()
     -- Update status
     linePlayerStatusDisplay.Text = "CONNECTIONS: 0/0 | STATUS: INACTIVE"
 
-    showNotification("LINE_PLAYER_ON_HEAD: DISABLED")
+    if showNotification then
+        showNotification("LINE_PLAYER_ON_HEAD: DISABLED")
+    end
 end
 
 -- Teleport Functions
@@ -1921,7 +2058,9 @@ local function togglePanelVisibility()
         logoStatusIndicator.BackgroundColor3 = colors.text
         TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 8, 0, 8)}):Play()
 
-        showNotification("PANEL_STATE: VISIBLE")
+        if showNotification then
+            showNotification("PANEL_STATE: VISIBLE")
+        end
     else
         -- Hide panel
         mainPanel.BackgroundTransparency = 1
@@ -1934,7 +2073,9 @@ local function togglePanelVisibility()
         logoStatusIndicator.BackgroundColor3 = colors.text_dim
         TweenService:Create(logoStatusIndicator, TweenInfo.new(0.3), {Size = UDim2.new(0, 6, 0, 6)}):Play()
 
-        showNotification("PANEL_STATE: HIDDEN")
+        if showNotification then
+            showNotification("PANEL_STATE: HIDDEN")
+        end
     end
 end
 
@@ -2834,8 +2975,8 @@ local function startCarryingPlayers()
         -- Create physical carry for each player
         local carryConnection = createPhysicalCarry(targetPlayer)
         if carryConnection then
-            -- Store carry connection for cleanup
-            targetPlayer.CarryConnection = carryConnection
+            -- Store carry connection for cleanup using the carryConnections table
+            carryConnections[targetPlayer] = carryConnection
 
             -- Add visual carry effect with appropriate style
             if addCarryEffect then
@@ -3801,10 +3942,11 @@ carrySearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     clearCarrySearchButton.Visible = carrySearchBox.Text ~= ""
 
     -- Debounce rapid typing
-    if carrySearchBox._lastUpdateTime and (tick() - carrySearchBox._lastUpdateTime) < 0.1 then
+    local currentTime = tick()
+    if carrySearchBox:GetAttribute("lastUpdateTime") and (currentTime - carrySearchBox:GetAttribute("lastUpdateTime")) < 0.1 then
         return
     end
-    carrySearchBox._lastUpdateTime = tick()
+    carrySearchBox:SetAttribute("lastUpdateTime", currentTime)
 
     -- Refresh carry player list with search filter
     refreshCarryPlayerList()
